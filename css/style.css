@@ -1,0 +1,97 @@
+body {
+    background-color: #0f172a ;
+    color:#ffffff ;
+    font-family: Arial, Helvetica, sans-serif;
+    padding: 20px;
+}
+
+header{
+    text-align: center;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+h1{
+    color: #38bdf8 ;
+    font-size: 32px ;
+}
+
+section{
+    background-color: #1e293b ;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+h2{
+    color:#7dd3fc;
+    font-size: 24px;
+}
+input{
+    width: 100%;
+    padding: 12px;
+    background-color: #334155;
+    color: #ffffff;
+    border-radius: 8px;
+    border: solid 1px  #475569;
+    box-sizing: border-box;
+
+}
+
+button{
+    background-color:#0284c7;
+    color:#ffffff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border:none;
+    cursor: pointer;
+}
+button:hover{
+    background-color: #0369a1;
+}
+
+main{
+    max-width:1000px;
+    margin: 0 auto;
+}
+
+#previsaoDias{
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap
+}
+
+#resultadosCidades{
+     display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    
+}
+
+#cidadesFavoritas{
+    
+     display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    }
+
+
+
+footer{
+    color: #94a3b8;
+     text-align: center;
+    padding: 20px;
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+

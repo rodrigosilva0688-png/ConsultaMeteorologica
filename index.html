@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta Meteorológica</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Consulta Meteorológica</h1>
+        <p>Confira o clima da sua cidade!</p>
+    </header>
+
+    <main>
+
+        <section>
+            <h2>Pesquisar cidade</h2>
+
+            <form id="formPesquisa">
+                <label for="cidade">Nome da cidade:</label>
+                <input
+                    type="text"
+                    id="cidade"
+                    placeholder="Ex: Porto Alegre"
+                    
+                    
+                >
+                <button type="submit">Pesquisar</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Resultados da pesquisa</h2>
+            <div id="resultadosCidades"></div>
+        </section>
+
+        <section>
+            <h2>Clima atual</h2>
+            <div id="climaAtual">
+                <p>Selecione uma cidade para consultar o clima.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Previsão para os próximos 5 dias</h2>
+            <div id="previsaoDias"></div>
+        </section>
+
+        <section>
+            <h2>Cidades favoritas</h2>
+            <div id="cidadesFavoritas">
+                <p>Nenhuma cidade favorita cadastrada.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Mensagens</h2>
+            <p id="mensagem">Aguardando pesquisa...</p>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>Dados meteorológicos fornecidos pela Open-Meteo.</p>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
