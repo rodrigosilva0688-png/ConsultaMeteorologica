@@ -327,3 +327,148 @@ footer {
         grid-template-columns: 1fr;
     }
 }
+
+
+.clima-condicao {
+    color: #e2e8f0;
+    font-size: 17px;
+    margin: 0;
+}
+
+.botao-favorito {
+    background: rgba(255, 207, 67, 0.12);
+    color: #ffcf43;
+    border: 1px solid #ffcf43;
+    width: fit-content;
+}
+
+.botao-favorito:hover {
+    background: #ffcf43;
+    color: #151515;
+}
+
+#previsaoDias {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.previsao-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 14px;
+    padding: 16px 10px;
+    text-align: center;
+    min-width: 0;
+    transition: transform 0.25s, border-color 0.25s;
+}
+
+.previsao-card:hover {
+    transform: translateY(-4px);
+    border-color: #ffcf43;
+}
+
+.previsao-data {
+    font-size: 13px;
+    margin: 0 0 12px;
+    color: #ffffff;
+    text-transform: capitalize;
+}
+
+.previsao-icone {
+    font-size: 32px;
+    margin-bottom: 12px;
+}
+
+.previsao-condicao {
+    color: #cbd5e1;
+    font-size: 12px;
+    min-height: 32px;
+}
+
+.previsao-temperaturas {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 14px 0;
+}
+
+.previsao-maxima {
+    font-size: 17px;
+    font-weight: bold;
+    color: #ffcf43;
+}
+
+.previsao-minima {
+    font-size: 15px;
+    color: #7dd3fc;
+}
+
+.previsao-chuva {
+    color: #cbd5e1;
+    font-size: 12px;
+}
+
+#cidadesFavoritas {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.favorito-card {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+}
+
+.favorito-nome {
+    flex: 1;
+    min-width: 120px;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+.favorito-consultar {
+    background: #ffcf43;
+    color: #151515;
+}
+
+.favorito-remover {
+    background: rgba(255, 90, 90, 0.12);
+    color: #ffaaaa;
+    border: 1px solid rgba(255, 90, 90, 0.45);
+}
+
+.favorito-remover:hover {
+    background: #b91c1c;
+    color: #ffffff;
+}
+
+@media (max-width: 1100px) {
+    #previsaoDias {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    #previsaoDias {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .favorito-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+@media (max-width: 400px) {
+    #previsaoDias {
+        grid-template-columns: 1fr;
+    }
+}
+
