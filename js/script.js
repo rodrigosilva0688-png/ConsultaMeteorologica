@@ -115,7 +115,7 @@ function consultarClima(cidade, botaoCidade) {
     climaAtual.textContent = "Carregando condições meteorológicas...";
 
     const urlClima =
-        `https://api.open-meteo.com/v1/forecast?latitude=${cidade.latitude}&longitude=${cidade.longitude}&current_weather=true`;
+    `https://api.open-meteo.com/v1/forecast?latitude=${cidade.latitude}&longitude=${cidade.longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&timezone=auto&forecast_days=5`;
 
     fetch(urlClima)
         .then(function(resposta) {
@@ -127,13 +127,16 @@ function consultarClima(cidade, botaoCidade) {
             return resposta.json();
         })
 
-        .then(function(dadosClima) {
+        .then(function(dadosClima) { 
+            const dias=dadosClima.daily.time;
 
             if (consultaAtual !== numeroConsultaClima) {
                 return;
             }
 
             console.log(dadosClima);
+            console.log(dadosClima.daily.temperature_2m_max[0]);
+            console.log(dadosClima.daily.temperature_2m_min[2]);
 
             exibirClima(cidade, dadosClima);
 
