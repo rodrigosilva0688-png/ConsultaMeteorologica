@@ -330,7 +330,8 @@ function consultarClima(cidade) {
 
 const urlClima =
     `https://api.open-meteo.com/v1/forecast?latitude=${cidade.latitude}&longitude=${cidade.longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&timezone=auto&forecast_days=5&current=apparent_temperature,relative_humidity_2m`;
-        fetch(urlClima)
+    console.log("URL enviada:", urlClima);    
+    fetch(urlClima)
         .then(function(resposta) {
             if (!resposta.ok) {
                 throw new Error("Erro ao consultar o clima.");
