@@ -326,10 +326,9 @@ function consultarClima(cidade) {
     climaAtual.textContent = "Carregando condições meteorológicas...";
     previsaoDias.textContent = "Carregando previsão...";
 
-    const urlClima =
-        `https://api.open-meteo.com/v1/forecast?latitude=${cidade.latitude}&longitude=${cidade.longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&timezone=auto&forecast_days=5`;
-
-    fetch(urlClima)
+const urlClima =
+    `https://api.open-meteo.com/v1/forecast?latitude=${cidade.latitude}&longitude=${cidade.longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&timezone=auto&forecast_days=5&current=apparent_temperature,relative_humidity_2m`;
+        fetch(urlClima)
         .then(function(resposta) {
             if (!resposta.ok) {
                 throw new Error("Erro ao consultar o clima.");
@@ -340,7 +339,11 @@ function consultarClima(cidade) {
             if (consultaAtual !== numeroConsultaClima) return;
 
             console.log(dadosClima);
+            console.log("Resposta completa:", dadosClima);
+            console.log("Dados atuais:", dadosClima.current);
 
+           console.log("Sensação térmica:", dadosClima.current?.apparent_temperature);
+           console.log("Umidade:", dadosClima.current?.relative_humidity_2m);
             const dias = dadosClima.daily?.time || [];
 
             dias.forEach(function(dia, indice) {
