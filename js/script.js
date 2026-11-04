@@ -173,6 +173,8 @@ function exibirClima(cidade, dadosClima) {
     }
 
     const temperaturaAtual = tempo.temperature;
+    const sensacaoTermica = dadosClima.current?.apparent_temperature;
+    const umidadeRelativa = dadosClima.current?.relative_humidity_2m;
 
     const nome = criarElemento("p", "clima-cidade", cidade.name);
 
