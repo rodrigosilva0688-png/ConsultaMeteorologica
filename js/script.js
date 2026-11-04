@@ -12,22 +12,6 @@ let numeroConsultaClima = 0;
 let cidadeSelecionada = null;
 let favoritos = [];
 
-try {
-    const salvos = JSON.parse(
-        localStorage.getItem("cidadesFavoritas") || "[]"
-    );
-
-    favoritos = Array.isArray(salvos) ? salvos : [];
-} catch (erro) {
-    console.error(erro);
-    favoritos = [];
-}
-
-function mostrarMensagem(texto, estado = "normal") {
-    mensagem.textContent = texto;
-    mensagem.dataset.estado = estado;
-}
-
 function criarElemento(tag, classe, texto) {
     const elemento = document.createElement(tag);
 
@@ -40,6 +24,83 @@ function criarElemento(tag, classe, texto) {
     }
 
     return elemento;
+}
+
+const secaoAlertas = criarElemento("section", "secao-alertas");
+secaoAlertas.id = "alertasMeteorologicos";
+secaoAlertas.hidden = true;
+
+const tituloAlertas = criarElemento(
+    "h2",
+    "",
+    "Alertas meteorológicos"
+);
+
+const conteudoAlertas = criarElemento(
+    "div",
+    "conteudo-alertas"
+);
+
+conteudoAlertas.setAttribute("aria-live", "polite");
+
+secaoAlertas.append(tituloAlertas, conteudoAlertas);
+climaAtual.closest("section").after(secaoAlertas);
+
+const estadosBrasil = {
+    "acre": "AC",
+    "alagoas": "AL",
+    "amapa": "AP",
+    "amazonas": "AM",
+    "bahia": "BA",
+    "ceara": "CE",
+    "distrito federal": "DF",
+    "espirito santo": "ES",
+    "goias": "GO",
+    "maranhao": "MA",
+    "mato grosso": "MT",
+    "mato grosso do sul": "MS",
+    "minas gerais": "MG",
+    "para": "PA",
+    "paraiba": "PB",
+    "parana": "PR",
+    "pernambuco": "PE",
+    "piaui": "PI",
+    "rio de janeiro": "RJ",
+    "rio grande do norte": "RN",
+    "rio grande do sul": "RS",
+    "rondonia": "RO",
+    "roraima": "RR",
+    "santa catarina": "SC",
+    "sao paulo": "SP",
+    "sergipe": "SE",
+    "tocantins": "TO"
+};
+
+function normalizarTexto(texto) {
+    return String(texto || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+}
+
+function obterUF(cidade) {
+    const estado = normalizarTexto(cidade.admin1);
+
+    if (/^[a-z]{2}$/.test(estado)) {
+        const sigla = estado.toUpperCase();
+
+        if (Object.values(estadosBrasil).includes(sigla)) {
+            return sigla;
+        }
+    }
+
+    return estadosBrasil[estado] || null;
+}
+
+function mostrarMensagem(texto, estado = "normal") {
+    mensagem.textContent = texto;
+    mensagem.dataset.estado = estado;
 }
 
 function salvarFavoritos() {
@@ -61,9 +122,20 @@ function salvarFavoritos() {
     }
 }
 
+try {
+    const salvos = JSON.parse(
+        localStorage.getItem("cidadesFavoritas") || "[]"
+    );
+
+    favoritos = Array.isArray(salvos) ? salvos : [];
+} catch (erro) {
+    console.error(erro);
+    favoritos = [];
+}
+
 function cidadeEhFavorita(cidade) {
     return favoritos.some(function(favorita) {
-        return favorita.id === cidade.id;
+        return String(favorita.id) === String(cidade.id);
     });
 }
 
@@ -84,7 +156,7 @@ function alternarFavorito(cidade) {
 
     if (cidadeEhFavorita(cidade)) {
         favoritos = favoritos.filter(function(item) {
-            return item.id !== cidade.id;
+            return String(item.id) !== String(cidade.id);
         });
     } else {
         favoritos.push({
@@ -92,6 +164,7 @@ function alternarFavorito(cidade) {
             name: cidade.name,
             admin1: cidade.admin1 || "",
             country: cidade.country || "",
+            country_code: cidade.country_code || "",
             latitude: cidade.latitude,
             longitude: cidade.longitude
         });
@@ -122,7 +195,10 @@ function exibirFavoritos() {
     }
 
     favoritos.forEach(function(cidade) {
-        const cartao = criarElemento("div", "favorito-card");
+        const cartao = criarElemento(
+            "div",
+            "favorito-card"
+        );
 
         const nome = criarElemento(
             "span",
@@ -160,9 +236,16 @@ function exibirFavoritos() {
 }
 
 function criarDetalhe(titulo, valor) {
-    const detalhe = criarElemento("div", "clima-detalhe");
+    const detalhe = criarElemento(
+        "div",
+        "clima-detalhe"
+    );
 
-    const rotulo = criarElemento("span", "", titulo);
+    const rotulo = criarElemento(
+        "span",
+        "",
+        titulo
+    );
 
     const informacao = criarElemento(
         "strong",
@@ -209,11 +292,8 @@ function descricaoClima(codigo) {
 
 function iconeClima(codigo) {
     if (codigo === 0) return "☀️";
-
     if ([1, 2].includes(codigo)) return "🌤️";
-
     if (codigo === 3) return "☁️";
-
     if ([45, 48].includes(codigo)) return "🌫️";
 
     if ([51, 53, 55, 56, 57].includes(codigo)) {
@@ -443,10 +523,267 @@ function exibirPrevisao(dadosClima) {
     });
 }
 
+function limparAlertas() {
+    secaoAlertas.hidden = true;
+    conteudoAlertas.replaceChildren();
+}
+
+function mostrarFonteAlertas() {
+    const fonte = criarElemento(
+        "a",
+        "alerta-fonte",
+        "Dados do INMET via RadarMeteorológico"
+    );
+
+    fonte.href = "https://radarmeteorologico.com.br/alertas";
+    fonte.target = "_blank";
+    fonte.rel = "noopener noreferrer";
+
+    conteudoAlertas.appendChild(fonte);
+}
+
+function textoDoAlerta(valor) {
+    if (typeof valor === "string") {
+        return valor;
+    }
+
+    if (valor && typeof valor === "object") {
+        return valor.descricao || valor.texto || "";
+    }
+
+    return "";
+}
+
+function criarAvisoMeteorologico(alerta) {
+    const cartao = criarElemento(
+        "article",
+        "alerta-card"
+    );
+
+    const nivelNumero = Number(alerta.nivel);
+
+    if (nivelNumero >= 3) {
+        cartao.classList.add("alerta-grave");
+    } else if (nivelNumero === 2) {
+        cartao.classList.add("alerta-perigo");
+    } else {
+        cartao.classList.add("alerta-potencial");
+    }
+
+    const nivel = criarElemento(
+        "span",
+        "alerta-nivel",
+        alerta.severidade || "Alerta meteorológico"
+    );
+
+    const evento = criarElemento(
+        "h3",
+        "alerta-evento",
+        `⚠️ ${alerta.evento || "Aviso meteorológico"}`
+    );
+
+    cartao.append(nivel, evento);
+
+    if (alerta.inicio) {
+        cartao.appendChild(
+            criarElemento(
+                "p",
+                "alerta-validade",
+                `Início: ${alerta.inicio}`
+            )
+        );
+    }
+
+    if (alerta.fim) {
+        cartao.appendChild(
+            criarElemento(
+                "p",
+                "alerta-validade",
+                `Término: ${alerta.fim}`
+            )
+        );
+    }
+
+    if (Array.isArray(alerta.riscos)) {
+        alerta.riscos.forEach(function(risco) {
+            const texto = textoDoAlerta(risco);
+
+            if (texto) {
+                cartao.appendChild(
+                    criarElemento(
+                        "p",
+                        "alerta-risco",
+                        texto
+                    )
+                );
+            }
+        });
+    } else if (typeof alerta.riscos === "string") {
+        cartao.appendChild(
+            criarElemento(
+                "p",
+                "alerta-risco",
+                alerta.riscos
+            )
+        );
+    }
+
+    if (Array.isArray(alerta.instrucoes)) {
+        alerta.instrucoes.forEach(function(instrucao) {
+            const texto = textoDoAlerta(instrucao);
+
+            if (texto) {
+                cartao.appendChild(
+                    criarElemento(
+                        "p",
+                        "alerta-instrucao",
+                        texto
+                    )
+                );
+            }
+        });
+    } else if (typeof alerta.instrucoes === "string") {
+        cartao.appendChild(
+            criarElemento(
+                "p",
+                "alerta-instrucao",
+                alerta.instrucoes
+            )
+        );
+    }
+
+    return cartao;
+}
+
+async function consultarAlertas(cidade, consultaAtual) {
+    limparAlertas();
+
+    const pais = normalizarTexto(cidade.country);
+
+    const cidadeBrasileira =
+        cidade.country_code === "BR" ||
+        pais === "brasil" ||
+        pais === "brazil";
+
+    if (!cidadeBrasileira) {
+        return;
+    }
+
+    const uf = obterUF(cidade);
+
+    if (!uf) {
+        return;
+    }
+
+    try {
+        const urlCidade =
+            `https://radarmeteorologico.com.br/api/v1/cidades?q=${encodeURIComponent(cidade.name)}`;
+
+        const respostaCidade = await fetch(urlCidade);
+
+        if (!respostaCidade.ok) {
+            throw new Error("Erro ao localizar município.");
+        }
+
+        const dadosCidade = await respostaCidade.json();
+
+        if (consultaAtual !== numeroConsultaClima) {
+            return;
+        }
+
+        if (!Array.isArray(dadosCidade.cidades)) {
+            throw new Error("Resposta de municípios inválida.");
+        }
+
+        const municipio = dadosCidade.cidades.find(function(item) {
+            return (
+                normalizarTexto(item.nome) === normalizarTexto(cidade.name) &&
+                String(item.uf).toUpperCase() === uf
+            );
+        });
+
+        if (!municipio || !municipio.ibge) {
+            throw new Error(
+                "Município não identificado na base IBGE."
+            );
+        }
+
+        const urlAlertas =
+            `https://radarmeteorologico.com.br/api/v1/alertas?uf=${uf}`;
+
+        const respostaAlertas = await fetch(urlAlertas);
+
+        if (!respostaAlertas.ok) {
+            throw new Error("Erro ao consultar alertas.");
+        }
+
+        const dadosAlertas = await respostaAlertas.json();
+
+        if (consultaAtual !== numeroConsultaClima) {
+            return;
+        }
+
+        if (!Array.isArray(dadosAlertas.alertas)) {
+            throw new Error("Resposta de alertas inválida.");
+        }
+
+        const alertasDaCidade = dadosAlertas.alertas.filter(
+            function(alerta) {
+                return (
+                    alerta.futuro !== true &&
+                    Array.isArray(alerta.geocodes) &&
+                    alerta.geocodes.some(function(codigo) {
+                        return String(codigo) === String(municipio.ibge);
+                    })
+                );
+            }
+        );
+
+        if (alertasDaCidade.length === 0) {
+            return;
+        }
+
+        alertasDaCidade.sort(function(a, b) {
+            return Number(b.nivel || 0) - Number(a.nivel || 0);
+        });
+
+        conteudoAlertas.replaceChildren();
+
+        alertasDaCidade.forEach(function(alerta) {
+            conteudoAlertas.appendChild(
+                criarAvisoMeteorologico(alerta)
+            );
+        });
+
+        mostrarFonteAlertas();
+        secaoAlertas.hidden = false;
+
+    } catch (erro) {
+        if (consultaAtual !== numeroConsultaClima) {
+            return;
+        }
+
+        console.error("Erro ao consultar alertas:", erro);
+
+        conteudoAlertas.replaceChildren(
+            criarElemento(
+                "p",
+                "alerta-indisponivel",
+                "Não foi possível verificar os alertas meteorológicos desta cidade."
+            )
+        );
+
+        mostrarFonteAlertas();
+        secaoAlertas.hidden = false;
+    }
+}
+
 function consultarClima(cidade) {
     const consultaAtual = ++numeroConsultaClima;
 
     cidadeSelecionada = cidade;
+
+    limparAlertas();
 
     document.querySelectorAll(".botao-cidade").forEach(
         function(botao) {
@@ -510,13 +847,13 @@ function consultarClima(cidade) {
                 );
             }
 
-            console.log("Dados meteorológicos:", dadosClima);
-
             if (!dadosClima.current) {
                 throw new Error(
-                    "A API não retornou os dados meteorológicos atuais."
+                    "Dados meteorológicos atuais indisponíveis."
                 );
             }
+
+            console.log("Dados meteorológicos:", dadosClima);
 
             exibirClima(cidade, dadosClima);
             exibirPrevisao(dadosClima);
@@ -525,6 +862,8 @@ function consultarClima(cidade) {
                 "Consulta concluída!",
                 "sucesso"
             );
+
+            consultarAlertas(cidade, consultaAtual);
         })
         .catch(function(erro) {
             if (consultaAtual !== numeroConsultaClima) {
@@ -565,6 +904,7 @@ formPesquisa.addEventListener("submit", function(event) {
     ++numeroConsultaClima;
     cidadeSelecionada = null;
 
+    limparAlertas();
     resultadosCidades.replaceChildren();
 
     climaAtual.textContent =
@@ -618,20 +958,22 @@ formPesquisa.addEventListener("submit", function(event) {
                 );
 
                 botaoCidade.type = "button";
-
                 botaoCidade.dataset.cidadeId =
                     String(cidade.id);
 
-                botaoCidade.addEventListener(
-                    "click",
-                    function() {
-                        consultarClima(cidade);
-                    }
-                );
+                botaoCidade.addEventListener("click", function() {
+                    resultadosCidades
+                        .querySelectorAll(".botao-cidade")
+                        .forEach(function(outroBotao) {
+                            if (outroBotao !== botaoCidade) {
+                                outroBotao.remove();
+                            }
+                        });
 
-                resultadosCidades.appendChild(
-                    botaoCidade
-                );
+                    consultarClima(cidade);
+                });
+
+                resultadosCidades.appendChild(botaoCidade);
             });
 
             mostrarMensagem(

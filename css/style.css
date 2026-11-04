@@ -3,6 +3,10 @@
     box-sizing: border-box;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     margin: 0;
     padding: 25px;
@@ -84,7 +88,6 @@ header p {
 main {
     max-width: 1100px;
     margin: 0 auto;
-
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
@@ -92,17 +95,12 @@ main {
 
 section {
     background: rgba(25, 33, 42, 0.64);
-
     border: 1px solid rgba(255,255,255,0.18);
     border-radius: 18px;
-
     padding: 25px;
-
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-
     box-shadow: 0 15px 35px rgba(0,0,0,0.25);
-
     min-width: 0;
 }
 
@@ -127,13 +125,10 @@ label {
 input {
     width: 100%;
     padding: 14px;
-
     background: rgba(0,0,0,0.35);
     color: #ffffff;
-
     border: 1px solid rgba(255,255,255,0.25);
     border-radius: 10px;
-
     font-size: 15px;
     outline: none;
 }
@@ -150,22 +145,28 @@ input:focus {
 button {
     background-color: #ffcf43;
     color: #151515;
-
     padding: 12px 20px;
     border: none;
     border-radius: 10px;
-
     font-size: 14px;
     font-weight: bold;
-
     cursor: pointer;
-
-    transition: 0.25s ease;
+    transition:
+        background-color 0.25s,
+        color 0.25s,
+        transform 0.25s,
+        border-color 0.25s;
 }
 
 button:hover {
     background-color: #ffe17a;
     transform: translateY(-2px);
+}
+
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid #ffcf43;
+    outline-offset: 3px;
 }
 
 #resultadosCidades {
@@ -177,27 +178,17 @@ button:hover {
 .botao-cidade {
     background: rgba(255,255,255,0.08);
     color: #ffffff;
-
     border: 1px solid rgba(255,255,255,0.22);
     border-radius: 10px;
-
     padding: 14px;
-
     text-align: left;
     font-weight: normal;
-
-    transition: 0.25s ease;
 }
 
 .botao-cidade:hover {
     background: rgba(255,207,67,0.17);
     border-color: #ffcf43;
     color: #ffffff;
-}
-
-.botao-cidade:focus-visible {
-    outline: 2px solid #ffcf43;
-    outline-offset: 3px;
 }
 
 .botao-cidade.selecionado {
@@ -233,6 +224,11 @@ button:hover {
     line-height: 1.1;
 }
 
+.clima-condicao {
+    color: #e2e8f0;
+    font-size: 17px;
+}
+
 .clima-informacoes {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -242,9 +238,9 @@ button:hover {
 .clima-detalhe {
     background: rgba(255,255,255,0.07);
     border: 1px solid rgba(255,255,255,0.12);
-
     border-radius: 12px;
     padding: 15px;
+    min-width: 0;
 }
 
 .clima-detalhe span {
@@ -257,18 +253,125 @@ button:hover {
 .clima-detalhe strong {
     color: #ffffff;
     font-size: 18px;
+    overflow-wrap: anywhere;
+}
+
+.botao-favorito {
+    background: rgba(255,207,67,0.12);
+    color: #ffcf43;
+    border: 1px solid #ffcf43;
+    width: fit-content;
+}
+
+.botao-favorito:hover {
+    background: #ffcf43;
+    color: #151515;
 }
 
 #previsaoDias {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.previsao-card {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 14px;
+    padding: 16px 10px;
+    text-align: center;
+    min-width: 0;
+    transition:
+        transform 0.25s,
+        border-color 0.25s;
+}
+
+.previsao-card:hover {
+    transform: translateY(-4px);
+    border-color: #ffcf43;
+}
+
+.previsao-data {
+    font-size: 13px;
+    margin: 0 0 12px;
+    color: #ffffff;
+    text-transform: capitalize;
+}
+
+.previsao-icone {
+    font-size: 32px;
+    margin-bottom: 12px;
+}
+
+.previsao-condicao {
+    color: #cbd5e1;
+    font-size: 12px;
+    min-height: 32px;
+    line-height: 1.4;
+}
+
+.previsao-temperaturas {
     display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
+    flex-direction: column;
+    gap: 8px;
+    margin: 14px 0;
+}
+
+.previsao-maxima {
+    font-size: 17px;
+    font-weight: bold;
+    color: #ffcf43;
+}
+
+.previsao-minima {
+    font-size: 15px;
+    color: #7dd3fc;
+}
+
+.previsao-chuva {
+    color: #cbd5e1;
+    font-size: 12px;
+    overflow-wrap: anywhere;
 }
 
 #cidadesFavoritas {
     display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.favorito-card {
+    display: flex;
+    align-items: center;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 10px;
+    padding: 14px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+}
+
+.favorito-nome {
+    flex: 1;
+    min-width: 120px;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+.favorito-consultar {
+    background: #ffcf43;
+    color: #151515;
+}
+
+.favorito-remover {
+    background: rgba(255,90,90,0.12);
+    color: #ffaaaa;
+    border: 1px solid rgba(255,90,90,0.45);
+}
+
+.favorito-remover:hover {
+    background: #b91c1c;
+    color: #ffffff;
 }
 
 #mensagem {
@@ -285,6 +388,86 @@ button:hover {
     color: #b3f1c5;
 }
 
+.secao-alertas {
+    grid-column: 1 / -1;
+}
+
+.secao-alertas[hidden] {
+    display: none;
+}
+
+.conteudo-alertas {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.alerta-card {
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08);
+}
+
+.alerta-potencial {
+    border-left: 5px solid #facc15;
+}
+
+.alerta-perigo {
+    border-left: 5px solid #f97316;
+}
+
+.alerta-grave {
+    border-left: 5px solid #ef4444;
+}
+
+.alerta-nivel {
+    display: inline-block;
+    color: #ffcf43;
+    font-weight: bold;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.alerta-evento {
+    margin: 0 0 12px;
+    font-size: 21px;
+    color: #ffffff;
+}
+
+.alerta-validade {
+    color: #cbd5e1;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.alerta-risco {
+    color: #f1f5f9;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.alerta-instrucao {
+    color: #cbd5e1;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.alerta-fonte {
+    color: #7dd3fc;
+    font-size: 12px;
+    text-decoration: underline;
+}
+
+.alerta-fonte:hover {
+    color: #ffffff;
+}
+
+.alerta-indisponivel {
+    color: #ffcf43;
+    font-size: 14px;
+}
+
 footer {
     text-align: center;
     color: #94a3b8;
@@ -293,8 +476,13 @@ footer {
     font-size: 13px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1100px) {
+    #previsaoDias {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
 
+@media (max-width: 768px) {
     body {
         padding: 12px;
     }
@@ -319,156 +507,89 @@ footer {
     .botao-cidade {
         width: 100%;
     }
-}
 
-@media (max-width: 400px) {
-
-    .clima-informacoes {
-        grid-template-columns: 1fr;
-    }
-}
-
-
-.clima-condicao {
-    color: #e2e8f0;
-    font-size: 17px;
-    margin: 0;
-}
-
-.botao-favorito {
-    background: rgba(255, 207, 67, 0.12);
-    color: #ffcf43;
-    border: 1px solid #ffcf43;
-    width: fit-content;
-}
-
-.botao-favorito:hover {
-    background: #ffcf43;
-    color: #151515;
-}
-
-#previsaoDias {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 12px;
-}
-
-.previsao-card {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 14px;
-    padding: 16px 10px;
-    text-align: center;
-    min-width: 0;
-    transition: transform 0.25s, border-color 0.25s;
-}
-
-.previsao-card:hover {
-    transform: translateY(-4px);
-    border-color: #ffcf43;
-}
-
-.previsao-data {
-    font-size: 13px;
-    margin: 0 0 12px;
-    color: #ffffff;
-    text-transform: capitalize;
-}
-
-.previsao-icone {
-    font-size: 32px;
-    margin-bottom: 12px;
-}
-
-.previsao-condicao {
-    color: #cbd5e1;
-    font-size: 12px;
-    min-height: 32px;
-}
-
-.previsao-temperaturas {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin: 14px 0;
-}
-
-.previsao-maxima {
-    font-size: 17px;
-    font-weight: bold;
-    color: #ffcf43;
-}
-
-.previsao-minima {
-    font-size: 15px;
-    color: #7dd3fc;
-}
-
-.previsao-chuva {
-    color: #cbd5e1;
-    font-size: 12px;
-}
-
-#cidadesFavoritas {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.favorito-card {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 14px;
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 12px;
-}
-
-.favorito-nome {
-    flex: 1;
-    min-width: 120px;
-    color: #ffffff;
-    font-size: 14px;
-}
-
-.favorito-consultar {
-    background: #ffcf43;
-    color: #151515;
-}
-
-.favorito-remover {
-    background: rgba(255, 90, 90, 0.12);
-    color: #ffaaaa;
-    border: 1px solid rgba(255, 90, 90, 0.45);
-}
-
-.favorito-remover:hover {
-    background: #b91c1c;
-    color: #ffffff;
-}
-
-@media (max-width: 1100px) {
-    #previsaoDias {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 768px) {
-    #previsaoDias {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .botao-favorito {
+        width: 100%;
     }
 
     .favorito-card {
         flex-direction: column;
         align-items: stretch;
     }
-}
 
-@media (max-width: 400px) {
     #previsaoDias {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
+@media (max-width: 600px) {
+    #previsaoDias {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .previsao-card {
+        padding: 10px 5px;
+        border-radius: 10px;
+    }
+
+    .previsao-data {
+        font-size: 11px;
+        margin-bottom: 8px;
+    }
+
+    .previsao-icone {
+        font-size: 25px;
+        margin-bottom: 8px;
+    }
+
+    .previsao-condicao {
+        font-size: 10px;
+        line-height: 1.3;
+        min-height: 28px;
+    }
+
+    .previsao-temperaturas {
+        gap: 5px;
+        margin: 8px 0;
+    }
+
+    .previsao-maxima {
+        font-size: 14px;
+    }
+
+    .previsao-minima {
+        font-size: 12px;
+    }
+
+    .previsao-chuva {
+        font-size: 10px;
+    }
+
+    .alerta-card {
+        padding: 15px;
+    }
+
+    .alerta-evento {
+        font-size: 17px;
+    }
+}
+
+@media (max-width: 400px) {
+    .clima-informacoes {
+        grid-template-columns: 1fr;
+    }
+
+    #previsaoDias {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+    }
+}
