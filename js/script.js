@@ -431,7 +431,25 @@ function codigoIbge(codigo) {
 
     return String(codigo ?? "");
 }
+function alertaEstaVigente(alerta) {
+    if (alerta.futuro === true) {
+        return false;
+    }
 
+    if (!alerta.fim) {
+        return false;
+    }
+
+    const fim = new Date(
+        alerta.fim.replace(" ", "T")
+    );
+
+    if (Number.isNaN(fim.getTime())) {
+        return false;
+    }
+
+    return fim.getTime() > Date.now();
+}
 function criarAlerta(alerta) {
     const card = criarElemento("article", "alerta-card");
     const nivel = Number(alerta.nivel);
@@ -581,14 +599,13 @@ async function consultarAlertas(cidade, numeroDaConsulta) {
             throw new Error("Resposta de alertas desconhecida.");
         }
 
-        const locais = alertas.filter(alerta =>
-            alerta.futuro !== true &&
-            Array.isArray(alerta.geocodes) &&
-            alerta.geocodes.some(
-                codigo => codigoIbge(codigo) === ibge
-            )
-        );
-
+const locais = alertas.filter(alerta =>
+    alertaEstaVigente(alerta) &&
+    Array.isArray(alerta.geocodes) &&
+    alerta.geocodes.some(
+        codigo => codigoIbge(codigo) === ibge
+    )
+);
         if (!locais.length) {
             return;
         }
