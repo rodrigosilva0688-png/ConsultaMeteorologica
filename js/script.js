@@ -43,17 +43,17 @@ const estados = {
 };
 
 function criarElemento(tag, classe = "", texto) {
-    const el = document.createElement(tag);
+    const elemento = document.createElement(tag);
 
     if (classe) {
-        el.className = classe;
+        elemento.className = classe;
     }
 
     if (texto !== undefined) {
-        el.textContent = texto;
+        elemento.textContent = texto;
     }
 
-    return el;
+    return elemento;
 }
 
 function normalizar(texto) {
@@ -74,9 +74,13 @@ try {
         localStorage.getItem("cidadesFavoritas") || "[]"
     );
 
-    favoritos = Array.isArray(armazenados) ? armazenados : [];
+    favoritos = Array.isArray(armazenados)
+        ? armazenados
+        : [];
+
 } catch (erro) {
-    console.error(erro);
+    console.error("Erro ao carregar favoritos:", erro);
+    favoritos = [];
 }
 
 function identificador(cidade) {
@@ -86,9 +90,9 @@ function identificador(cidade) {
 }
 
 function ehFavorita(cidade) {
-    return favoritos.some(
-        item => identificador(item) === identificador(cidade)
-    );
+    return favoritos.some(function(item) {
+        return identificador(item) === identificador(cidade);
+    });
 }
 
 function atualizarBotaoFavorito() {
@@ -105,9 +109,9 @@ function alternarFavorito(cidade) {
     const anteriores = [...favoritos];
 
     if (ehFavorita(cidade)) {
-        favoritos = favoritos.filter(
-            item => identificador(item) !== identificador(cidade)
-        );
+        favoritos = favoritos.filter(function(item) {
+            return identificador(item) !== identificador(cidade);
+        });
     } else {
         favoritos.push({
             id: cidade.id,
@@ -127,10 +131,14 @@ function alternarFavorito(cidade) {
         );
     } catch (erro) {
         favoritos = anteriores;
+
+        console.error("Erro ao salvar favoritos:", erro);
+
         mostrarMensagem(
             "Não foi possível salvar os favoritos.",
             "erro"
         );
+
         return;
     }
 
@@ -141,19 +149,23 @@ function alternarFavorito(cidade) {
 function exibirFavoritos() {
     cidadesFavoritas.replaceChildren();
 
-    if (!favoritos.length) {
-        cidadesFavoritas.append(
+    if (favoritos.length === 0) {
+        cidadesFavoritas.appendChild(
             criarElemento(
                 "p",
                 "texto-vazio",
                 "Nenhuma cidade favorita cadastrada."
             )
         );
+
         return;
     }
 
-    favoritos.forEach(cidade => {
-        const cartao = criarElemento("div", "favorito-card");
+    favoritos.forEach(function(cidade) {
+        const cartao = criarElemento(
+            "div",
+            "favorito-card"
+        );
 
         const nome = criarElemento(
             "span",
@@ -176,55 +188,63 @@ function exibirFavoritos() {
         consultar.type = "button";
         remover.type = "button";
 
-        consultar.addEventListener("click", () => consultarClima(cidade));
-        remover.addEventListener("click", () => alternarFavorito(cidade));
+        consultar.addEventListener("click", function() {
+            consultarClima(cidade);
+        });
+
+        remover.addEventListener("click", function() {
+            alternarFavorito(cidade);
+        });
 
         cartao.append(nome, consultar, remover);
-        cidadesFavoritas.append(cartao);
+        cidadesFavoritas.appendChild(cartao);
     });
 }
 
-function descricaoClima(c) {
-    if (c === 0) return "Céu limpo";
-    if ([1, 2].includes(c)) return "Parcialmente nublado";
-    if (c === 3) return "Nublado";
-    if ([45, 48].includes(c)) return "Neblina";
-    if ([51, 53, 55, 56, 57].includes(c)) return "Garoa";
+function descricaoClima(codigo) {
+    if (codigo === 0) return "Céu limpo";
+    if ([1, 2].includes(codigo)) return "Parcialmente nublado";
+    if (codigo === 3) return "Nublado";
+    if ([45, 48].includes(codigo)) return "Neblina";
 
-    if ([61, 63, 65, 66, 67, 80, 81, 82].includes(c)) {
+    if ([51, 53, 55, 56, 57].includes(codigo)) {
+        return "Garoa";
+    }
+
+    if ([61, 63, 65, 66, 67, 80, 81, 82].includes(codigo)) {
         return "Chuva";
     }
 
-    if ([71, 73, 75, 77, 85, 86].includes(c)) {
+    if ([71, 73, 75, 77, 85, 86].includes(codigo)) {
         return "Neve";
     }
 
-    if ([95, 96, 99].includes(c)) {
+    if ([95, 96, 99].includes(codigo)) {
         return "Tempestade";
     }
 
     return "Condição não informada";
 }
 
-function iconeClima(c) {
-    if (c === 0) return "☀️";
-    if ([1, 2].includes(c)) return "🌤️";
-    if (c === 3) return "☁️";
-    if ([45, 48].includes(c)) return "🌫️";
+function iconeClima(codigo) {
+    if (codigo === 0) return "☀️";
+    if ([1, 2].includes(codigo)) return "🌤️";
+    if (codigo === 3) return "☁️";
+    if ([45, 48].includes(codigo)) return "🌫️";
 
-    if ([51, 53, 55, 56, 57].includes(c)) {
+    if ([51, 53, 55, 56, 57].includes(codigo)) {
         return "🌦️";
     }
 
-    if ([61, 63, 65, 66, 67, 80, 81, 82].includes(c)) {
+    if ([61, 63, 65, 66, 67, 80, 81, 82].includes(codigo)) {
         return "🌧️";
     }
 
-    if ([71, 73, 75, 77, 85, 86].includes(c)) {
+    if ([71, 73, 75, 77, 85, 86].includes(codigo)) {
         return "❄️";
     }
 
-    if ([95, 96, 99].includes(c)) {
+    if ([95, 96, 99].includes(codigo)) {
         return "⛈️";
     }
 
@@ -232,20 +252,20 @@ function iconeClima(c) {
 }
 
 function numero(valor, unidade = "") {
-    return typeof valor === "number"
+    return typeof valor === "number" && Number.isFinite(valor)
         ? `${valor.toLocaleString("pt-BR")}${unidade}`
         : "N/D";
 }
 
 function criarDetalhe(titulo, valor) {
-    const card = criarElemento("div", "clima-detalhe");
+    const cartao = criarElemento("div", "clima-detalhe");
 
-    card.append(
+    cartao.append(
         criarElemento("span", "", titulo),
         criarElemento("strong", "", valor)
     );
 
-    return card;
+    return cartao;
 }
 
 function exibirClima(cidade, dados) {
@@ -264,7 +284,7 @@ function exibirClima(cidade, dados) {
     const regiao = criarElemento(
         "p",
         "clima-regiao",
-        `${cidade.admin1 || ""} ${cidade.country || ""}`
+        `${cidade.admin1 || ""} ${cidade.country || ""}`.trim()
     );
 
     const temperatura = criarElemento(
@@ -273,12 +293,13 @@ function exibirClima(cidade, dados) {
         numero(tempo.temperature_2m, "°C")
     );
 
-    temperatura.style.color =
-        tempo.temperature_2m < 20
-            ? "#84d9ff"
-            : tempo.temperature_2m <= 30
-                ? "#ffcd56"
-                : "#ff8a7b";
+    if (tempo.temperature_2m < 20) {
+        temperatura.style.color = "#84d9ff";
+    } else if (tempo.temperature_2m <= 30) {
+        temperatura.style.color = "#ffcd56";
+    } else {
+        temperatura.style.color = "#ff8a7b";
+    }
 
     const condicao = criarElemento(
         "p",
@@ -286,7 +307,10 @@ function exibirClima(cidade, dados) {
         `${iconeClima(tempo.weather_code)} ${descricaoClima(tempo.weather_code)}`
     );
 
-    const detalhes = criarElemento("div", "clima-informacoes");
+    const detalhes = criarElemento(
+        "div",
+        "clima-informacoes"
+    );
 
     detalhes.append(
         criarDetalhe(
@@ -307,11 +331,17 @@ function exibirClima(cidade, dados) {
         )
     );
 
-    const favorito = criarElemento("button", "botao-favorito");
+    const favorito = criarElemento(
+        "button",
+        "botao-favorito"
+    );
+
     favorito.id = "botaoFavorito";
     favorito.type = "button";
 
-    favorito.addEventListener("click", () => alternarFavorito(cidade));
+    favorito.addEventListener("click", function() {
+        alternarFavorito(cidade);
+    });
 
     climaAtual.replaceChildren(
         nome,
@@ -334,17 +364,18 @@ function exibirPrevisao(dados) {
 
     previsaoDias.replaceChildren();
 
-    diario.time.slice(0, 5).forEach((dia, i) => {
-        const card = criarElemento("article", "previsao-card");
+    diario.time.slice(0, 5).forEach(function(dia, indice) {
+        const cartao = criarElemento(
+            "article",
+            "previsao-card"
+        );
 
-        const data = new Date(`${dia}T12:00:00`).toLocaleDateString(
-            "pt-BR",
-            {
+        const data = new Date(`${dia}T12:00:00`)
+            .toLocaleDateString("pt-BR", {
                 weekday: "short",
                 day: "2-digit",
                 month: "2-digit"
-            }
-        );
+            });
 
         const temperaturas = criarElemento(
             "div",
@@ -355,28 +386,33 @@ function exibirPrevisao(dados) {
             criarElemento(
                 "span",
                 "previsao-maxima",
-                `↑ ${numero(diario.temperature_2m_max?.[i], "°C")}`
+                `↑ ${numero(diario.temperature_2m_max?.[indice], "°C")}`
             ),
             criarElemento(
                 "span",
                 "previsao-minima",
-                `↓ ${numero(diario.temperature_2m_min?.[i], "°C")}`
+                `↓ ${numero(diario.temperature_2m_min?.[indice], "°C")}`
             )
         );
 
-        const chuva = diario.precipitation_probability_max?.[i];
+        const chuva =
+            diario.precipitation_probability_max?.[indice];
 
-        card.append(
-            criarElemento("h3", "previsao-data", data),
+        cartao.append(
+            criarElemento(
+                "h3",
+                "previsao-data",
+                data
+            ),
             criarElemento(
                 "div",
                 "previsao-icone",
-                iconeClima(diario.weather_code?.[i])
+                iconeClima(diario.weather_code?.[indice])
             ),
             criarElemento(
                 "p",
                 "previsao-condicao",
-                descricaoClima(diario.weather_code?.[i])
+                descricaoClima(diario.weather_code?.[indice])
             ),
             temperaturas,
             criarElemento(
@@ -386,18 +422,31 @@ function exibirPrevisao(dados) {
             )
         );
 
-        previsaoDias.append(card);
+        previsaoDias.appendChild(cartao);
     });
 }
 
-const secaoAlertas = criarElemento("section", "secao-alertas");
+const secaoAlertas = criarElemento(
+    "section",
+    "secao-alertas"
+);
+
 secaoAlertas.id = "alertasMeteorologicos";
 secaoAlertas.hidden = true;
 
-const conteudoAlertas = criarElemento("div", "conteudo-alertas");
+const conteudoAlertas = criarElemento(
+    "div",
+    "conteudo-alertas"
+);
+
+conteudoAlertas.setAttribute("aria-live", "polite");
 
 secaoAlertas.append(
-    criarElemento("h2", "", "⚠ Alertas meteorológicos"),
+    criarElemento(
+        "h2",
+        "",
+        "⚠ Alertas meteorológicos"
+    ),
     conteudoAlertas
 );
 
@@ -419,49 +468,85 @@ function fonteAlertas() {
     link.target = "_blank";
     link.rel = "noopener noreferrer";
 
-    conteudoAlertas.append(link);
+    conteudoAlertas.appendChild(link);
 }
 
 function codigoIbge(codigo) {
     if (codigo && typeof codigo === "object") {
         return String(
-            codigo.ibge ?? codigo.codigo ?? codigo.geocode ?? ""
+            codigo.ibge ??
+            codigo.codigo ??
+            codigo.geocode ??
+            ""
         );
     }
 
     return String(codigo ?? "");
 }
+
+function interpretarDataAlerta(valor) {
+    if (typeof valor !== "string" || !valor.trim()) {
+        return null;
+    }
+
+    let texto = valor.trim().replace(" ", "T");
+
+    if (!/(Z|[+-]\d{2}:\d{2})$/i.test(texto)) {
+        texto += "-03:00";
+    }
+
+    const data = new Date(texto);
+
+    return Number.isNaN(data.getTime())
+        ? null
+        : data;
+}
+
 function alertaEstaVigente(alerta) {
     if (alerta.futuro === true) {
         return false;
     }
 
-    if (!alerta.fim) {
+    const fim = interpretarDataAlerta(alerta.fim);
+
+    if (!fim) {
         return false;
     }
 
-const fim = new Date(
-    alerta.fim.replace(" ", "T") + "-03:00"
-);
-    if (Number.isNaN(fim.getTime())) {
+    const agora = Date.now();
+
+    if (fim.getTime() <= agora) {
         return false;
     }
 
-    return fim.getTime() > Date.now();
+    if (alerta.inicio) {
+        const inicio = interpretarDataAlerta(alerta.inicio);
+
+        if (!inicio || inicio.getTime() > agora) {
+            return false;
+        }
+    }
+
+    return true;
 }
-function criarAlerta(alerta) {
-    const card = criarElemento("article", "alerta-card");
-    const nivel = Number(alerta.nivel);
 
-    card.classList.add(
-        nivel >= 3
-            ? "alerta-grave"
-            : nivel === 2
-                ? "alerta-perigo"
-                : "alerta-potencial"
+function criarAlerta(alerta) {
+    const cartao = criarElemento(
+        "article",
+        "alerta-card"
     );
 
-    card.append(
+    const nivel = Number(alerta.nivel);
+
+    if (nivel >= 3) {
+        cartao.classList.add("alerta-grave");
+    } else if (nivel === 2) {
+        cartao.classList.add("alerta-perigo");
+    } else {
+        cartao.classList.add("alerta-potencial");
+    }
+
+    cartao.append(
         criarElemento(
             "span",
             "alerta-nivel",
@@ -474,8 +559,18 @@ function criarAlerta(alerta) {
         )
     );
 
+    if (alerta.inicio) {
+        cartao.appendChild(
+            criarElemento(
+                "p",
+                "alerta-validade",
+                `Início: ${alerta.inicio}`
+            )
+        );
+    }
+
     if (alerta.fim) {
-        card.append(
+        cartao.appendChild(
             criarElemento(
                 "p",
                 "alerta-validade",
@@ -489,13 +584,13 @@ function criarAlerta(alerta) {
             ? alerta[campo]
             : [alerta[campo]];
 
-        valores.forEach(item => {
+        valores.forEach(function(item) {
             const texto = typeof item === "string"
                 ? item
-                : (item?.descricao || item?.texto);
+                : item?.descricao || item?.texto;
 
             if (texto) {
-                card.append(
+                cartao.appendChild(
                     criarElemento(
                         "p",
                         campo === "riscos"
@@ -508,15 +603,21 @@ function criarAlerta(alerta) {
         });
     }
 
-    return card;
+    return cartao;
 }
 
 async function consultarAlertas(cidade, numeroDaConsulta) {
+    if (numeroDaConsulta !== consultaAtual) {
+        return;
+    }
+
     limparAlertas();
 
     const brasileiro =
         cidade.country_code === "BR" ||
-        ["brasil", "brazil"].includes(normalizar(cidade.country));
+        ["brasil", "brazil"].includes(
+            normalizar(cidade.country)
+        );
 
     if (!brasileiro) {
         return;
@@ -537,10 +638,13 @@ async function consultarAlertas(cidade, numeroDaConsulta) {
         const municipiosResposta = await fetch(urlMunicipios);
 
         if (!municipiosResposta.ok) {
-            throw new Error("Falha na consulta de municípios.");
+            throw new Error(
+                "Falha na consulta de municípios."
+            );
         }
 
-        const municipiosJson = await municipiosResposta.json();
+        const municipiosJson =
+            await municipiosResposta.json();
 
         if (numeroDaConsulta !== consultaAtual) {
             return;
@@ -551,13 +655,18 @@ async function consultarAlertas(cidade, numeroDaConsulta) {
             : municipiosJson.cidades;
 
         if (!Array.isArray(municipios)) {
-            throw new Error("Resposta de municípios desconhecida.");
+            throw new Error(
+                "Resposta de municípios desconhecida."
+            );
         }
 
-        const municipio = municipios.find(item =>
-            normalizar(item.nome) === normalizar(cidade.name) &&
-            String(item.uf).toUpperCase() === uf
-        );
+        const municipio = municipios.find(function(item) {
+            return (
+                normalizar(item.nome) ===
+                normalizar(cidade.name) &&
+                String(item.uf).toUpperCase() === uf
+            );
+        });
 
         if (!municipio) {
             throw new Error(
@@ -572,7 +681,9 @@ async function consultarAlertas(cidade, numeroDaConsulta) {
         );
 
         if (!/^\d{7}$/.test(ibge)) {
-            throw new Error("Código IBGE não identificado.");
+            throw new Error(
+                "Código IBGE não identificado."
+            );
         }
 
         const urlAlertas =
@@ -581,7 +692,9 @@ async function consultarAlertas(cidade, numeroDaConsulta) {
         const alertasResposta = await fetch(urlAlertas);
 
         if (!alertasResposta.ok) {
-            throw new Error("Falha na consulta de alertas.");
+            throw new Error(
+                "Falha na consulta de alertas."
+            );
         }
 
         const alertasJson = await alertasResposta.json();
@@ -595,26 +708,38 @@ async function consultarAlertas(cidade, numeroDaConsulta) {
             : alertasJson.alertas;
 
         if (!Array.isArray(alertas)) {
-            throw new Error("Resposta de alertas desconhecida.");
+            throw new Error(
+                "Resposta de alertas desconhecida."
+            );
         }
 
-const locais = alertas.filter(alerta =>
-    alertaEstaVigente(alerta) &&
-    Array.isArray(alerta.geocodes) &&
-    alerta.geocodes.some(
-        codigo => codigoIbge(codigo) === ibge
-    )
-);
-        if (!locais.length) {
+        const locais = alertas.filter(function(alerta) {
+            return (
+                alertaEstaVigente(alerta) &&
+                Array.isArray(alerta.geocodes) &&
+                alerta.geocodes.some(function(codigo) {
+                    return codigoIbge(codigo) === ibge;
+                })
+            );
+        });
+
+        if (locais.length === 0) {
             return;
         }
 
-        locais.sort(
-            (a, b) => Number(b.nivel || 0) - Number(a.nivel || 0)
-        );
+        locais.sort(function(a, b) {
+            return Number(b.nivel || 0) -
+                Number(a.nivel || 0);
+        });
 
-        locais.forEach(alerta => {
-            conteudoAlertas.append(criarAlerta(alerta));
+        if (numeroDaConsulta !== consultaAtual) {
+            return;
+        }
+
+        locais.forEach(function(alerta) {
+            conteudoAlertas.appendChild(
+                criarAlerta(alerta)
+            );
         });
 
         fonteAlertas();
@@ -625,9 +750,12 @@ const locais = alertas.filter(alerta =>
             return;
         }
 
-        console.error("Alertas:", erro);
+        console.error(
+            "Erro ao consultar alertas:",
+            erro
+        );
 
-        conteudoAlertas.append(
+        conteudoAlertas.replaceChildren(
             criarElemento(
                 "p",
                 "alerta-indisponivel",
@@ -646,12 +774,13 @@ async function consultarClima(cidade) {
     cidadeSelecionada = cidade;
     limparAlertas();
 
-    document.querySelectorAll(".botao-cidade").forEach(botao => {
-        botao.classList.toggle(
-            "selecionado",
-            botao.dataset.id === identificador(cidade)
-        );
-    });
+    document.querySelectorAll(".botao-cidade")
+        .forEach(function(botao) {
+            botao.classList.toggle(
+                "selecionado",
+                botao.dataset.id === identificador(cidade)
+            );
+        });
 
     climaAtual.textContent =
         "Consultando condições meteorológicas...";
@@ -664,19 +793,34 @@ async function consultarClima(cidade) {
     const parametros = new URLSearchParams({
         latitude: cidade.latitude,
         longitude: cidade.longitude,
-        current: "temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m",
-        daily: "temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code",
+        current: [
+            "temperature_2m",
+            "apparent_temperature",
+            "relative_humidity_2m",
+            "weather_code",
+            "wind_speed_10m",
+            "wind_direction_10m"
+        ].join(","),
+        daily: [
+            "temperature_2m_max",
+            "temperature_2m_min",
+            "precipitation_probability_max",
+            "weather_code"
+        ].join(","),
         timezone: "auto",
         forecast_days: "5"
     });
 
     try {
-        const resposta = await fetch(
-            `https://api.open-meteo.com/v1/forecast?${parametros}`
-        );
+        const urlClima =
+            `https://api.open-meteo.com/v1/forecast?${parametros}`;
+
+        const resposta = await fetch(urlClima);
 
         if (!resposta.ok) {
-            throw new Error(`Erro HTTP ${resposta.status}`);
+            throw new Error(
+                `Erro HTTP ${resposta.status}`
+            );
         }
 
         const dados = await resposta.json();
@@ -692,7 +836,9 @@ async function consultarClima(cidade) {
         }
 
         if (!dados.current || !dados.daily) {
-            throw new Error("Dados meteorológicos incompletos.");
+            throw new Error(
+                "Dados meteorológicos incompletos."
+            );
         }
 
         exibirClima(cidade, dados);
@@ -710,7 +856,10 @@ async function consultarClima(cidade) {
             return;
         }
 
-        console.error(erro);
+        console.error(
+            "Erro ao consultar clima:",
+            erro
+        );
 
         climaAtual.textContent =
             "Não foi possível consultar o clima desta cidade.";
@@ -735,6 +884,7 @@ formPesquisa.addEventListener("submit", async function(event) {
             "Digite o nome da cidade!",
             "erro"
         );
+
         return;
     }
 
@@ -754,12 +904,15 @@ formPesquisa.addEventListener("submit", async function(event) {
     mostrarMensagem("Pesquisando cidade...");
 
     try {
-        const resposta = await fetch(
-            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(nomeCidade)}&count=10&language=pt`
-        );
+        const url =
+            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(nomeCidade)}&count=10&language=pt`;
+
+        const resposta = await fetch(url);
 
         if (!resposta.ok) {
-            throw new Error(`Erro HTTP ${resposta.status}`);
+            throw new Error(
+                `Erro HTTP ${resposta.status}`
+            );
         }
 
         const dados = await resposta.json();
@@ -768,28 +921,38 @@ formPesquisa.addEventListener("submit", async function(event) {
             return;
         }
 
-        if (!Array.isArray(dados.results) || !dados.results.length) {
+        if (
+            !Array.isArray(dados.results) ||
+            dados.results.length === 0
+        ) {
             mostrarMensagem(
                 "Nenhuma cidade encontrada!",
                 "erro"
             );
+
             return;
         }
 
-        dados.results.forEach(cidade => {
+        dados.results.forEach(function(cidade) {
+            const estado =
+                cidade.admin1 || "Estado não informado";
+
+            const pais =
+                cidade.country || "País não informado";
+
             const botao = criarElemento(
                 "button",
                 "botao-cidade",
-                `${cidade.name} - ${cidade.admin1 || "Estado não informado"} - ${cidade.country || "País não informado"}`
+                `${cidade.name} - ${estado} - ${pais}`
             );
 
             botao.type = "button";
             botao.dataset.id = identificador(cidade);
 
-            botao.addEventListener("click", () => {
+            botao.addEventListener("click", function() {
                 resultadosCidades
                     .querySelectorAll(".botao-cidade")
-                    .forEach(outro => {
+                    .forEach(function(outro) {
                         if (outro !== botao) {
                             outro.remove();
                         }
@@ -798,7 +961,7 @@ formPesquisa.addEventListener("submit", async function(event) {
                 consultarClima(cidade);
             });
 
-            resultadosCidades.append(botao);
+            resultadosCidades.appendChild(botao);
         });
 
         mostrarMensagem(
@@ -811,7 +974,10 @@ formPesquisa.addEventListener("submit", async function(event) {
             return;
         }
 
-        console.error(erro);
+        console.error(
+            "Erro ao pesquisar cidades:",
+            erro
+        );
 
         mostrarMensagem(
             "Erro ao pesquisar cidades. Tente novamente.",
