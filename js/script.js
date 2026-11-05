@@ -170,8 +170,7 @@ function exibirFavoritos() {
         const nome = criarElemento(
             "span",
             "favorito-nome",
-            `${cidade.name} - ${cidade.admin1 || cidade.country}`
-        );
+`${cidade.name} - ${cidade.admin1 || "Região não informada"} - ${cidade.country || "País não informado"}`        );
 
         const consultar = criarElemento(
             "button",
