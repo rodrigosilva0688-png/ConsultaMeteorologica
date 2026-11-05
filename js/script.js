@@ -440,10 +440,9 @@ function alertaEstaVigente(alerta) {
         return false;
     }
 
-    const fim = new Date(
-        alerta.fim.replace(" ", "T")
-    );
-
+const fim = new Date(
+    alerta.fim.replace(" ", "T") + "-03:00"
+);
     if (Number.isNaN(fim.getTime())) {
         return false;
     }
