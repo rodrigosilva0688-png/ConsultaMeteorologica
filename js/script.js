@@ -7,46 +7,12 @@ const climaAtual = document.getElementById("climaAtual");
 const previsaoDias = document.getElementById("previsaoDias");
 const cidadesFavoritas = document.getElementById("cidadesFavoritas");
 
-let numeroPesquisa = 0;
-let numeroConsultaClima = 0;
+let pesquisaAtual = 0;
+let consultaAtual = 0;
 let cidadeSelecionada = null;
 let favoritos = [];
 
-function criarElemento(tag, classe, texto) {
-    const elemento = document.createElement(tag);
-
-    if (classe) {
-        elemento.className = classe;
-    }
-
-    if (texto !== undefined) {
-        elemento.textContent = texto;
-    }
-
-    return elemento;
-}
-
-const secaoAlertas = criarElemento("section", "secao-alertas");
-secaoAlertas.id = "alertasMeteorologicos";
-secaoAlertas.hidden = true;
-
-const tituloAlertas = criarElemento(
-    "h2",
-    "",
-    "Alertas meteorológicos"
-);
-
-const conteudoAlertas = criarElemento(
-    "div",
-    "conteudo-alertas"
-);
-
-conteudoAlertas.setAttribute("aria-live", "polite");
-
-secaoAlertas.append(tituloAlertas, conteudoAlertas);
-climaAtual.closest("section").after(secaoAlertas);
-
-const estadosBrasil = {
+const estados = {
     "acre": "AC",
     "alagoas": "AL",
     "amapa": "AP",
@@ -76,7 +42,21 @@ const estadosBrasil = {
     "tocantins": "TO"
 };
 
-function normalizarTexto(texto) {
+function criarElemento(tag, classe = "", texto) {
+    const el = document.createElement(tag);
+
+    if (classe) {
+        el.className = classe;
+    }
+
+    if (texto !== undefined) {
+        el.textContent = texto;
+    }
+
+    return el;
+}
+
+function normalizar(texto) {
     return String(texto || "")
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
@@ -84,80 +64,50 @@ function normalizarTexto(texto) {
         .trim();
 }
 
-function obterUF(cidade) {
-    const estado = normalizarTexto(cidade.admin1);
-
-    if (/^[a-z]{2}$/.test(estado)) {
-        const sigla = estado.toUpperCase();
-
-        if (Object.values(estadosBrasil).includes(sigla)) {
-            return sigla;
-        }
-    }
-
-    return estadosBrasil[estado] || null;
-}
-
 function mostrarMensagem(texto, estado = "normal") {
     mensagem.textContent = texto;
     mensagem.dataset.estado = estado;
 }
 
-function salvarFavoritos() {
-    try {
-        localStorage.setItem(
-            "cidadesFavoritas",
-            JSON.stringify(favoritos)
-        );
-
-        return true;
-    } catch (erro) {
-        console.error(erro);
-        mostrarMensagem(
-            "Não foi possível salvar os favoritos.",
-            "erro"
-        );
-
-        return false;
-    }
-}
-
 try {
-    const salvos = JSON.parse(
+    const armazenados = JSON.parse(
         localStorage.getItem("cidadesFavoritas") || "[]"
     );
 
-    favoritos = Array.isArray(salvos) ? salvos : [];
+    favoritos = Array.isArray(armazenados) ? armazenados : [];
 } catch (erro) {
     console.error(erro);
-    favoritos = [];
 }
 
-function cidadeEhFavorita(cidade) {
-    return favoritos.some(function(favorita) {
-        return String(favorita.id) === String(cidade.id);
-    });
+function identificador(cidade) {
+    return cidade.id != null
+        ? String(cidade.id)
+        : `${cidade.latitude},${cidade.longitude}`;
+}
+
+function ehFavorita(cidade) {
+    return favoritos.some(
+        item => identificador(item) === identificador(cidade)
+    );
 }
 
 function atualizarBotaoFavorito() {
     const botao = document.getElementById("botaoFavorito");
 
-    if (!botao || !cidadeSelecionada) {
-        return;
+    if (botao && cidadeSelecionada) {
+        botao.textContent = ehFavorita(cidadeSelecionada)
+            ? "★ Remover dos favoritos"
+            : "☆ Adicionar aos favoritos";
     }
-
-    botao.textContent = cidadeEhFavorita(cidadeSelecionada)
-        ? "★ Remover dos favoritos"
-        : "☆ Adicionar aos favoritos";
 }
 
 function alternarFavorito(cidade) {
     const anteriores = [...favoritos];
 
-    if (cidadeEhFavorita(cidade)) {
-        favoritos = favoritos.filter(function(item) {
-            return String(item.id) !== String(cidade.id);
-        });
+    if (ehFavorita(cidade)) {
+        favoritos = favoritos.filter(
+            item => identificador(item) !== identificador(cidade)
+        );
     } else {
         favoritos.push({
             id: cidade.id,
@@ -170,8 +120,17 @@ function alternarFavorito(cidade) {
         });
     }
 
-    if (!salvarFavoritos()) {
+    try {
+        localStorage.setItem(
+            "cidadesFavoritas",
+            JSON.stringify(favoritos)
+        );
+    } catch (erro) {
         favoritos = anteriores;
+        mostrarMensagem(
+            "Não foi possível salvar os favoritos.",
+            "erro"
+        );
         return;
     }
 
@@ -182,23 +141,19 @@ function alternarFavorito(cidade) {
 function exibirFavoritos() {
     cidadesFavoritas.replaceChildren();
 
-    if (favoritos.length === 0) {
-        cidadesFavoritas.appendChild(
+    if (!favoritos.length) {
+        cidadesFavoritas.append(
             criarElemento(
                 "p",
-                "",
+                "texto-vazio",
                 "Nenhuma cidade favorita cadastrada."
             )
         );
-
         return;
     }
 
-    favoritos.forEach(function(cidade) {
-        const cartao = criarElemento(
-            "div",
-            "favorito-card"
-        );
+    favoritos.forEach(cidade => {
+        const cartao = criarElemento("div", "favorito-card");
 
         const nome = criarElemento(
             "span",
@@ -212,140 +167,93 @@ function exibirFavoritos() {
             "Consultar"
         );
 
-        consultar.type = "button";
-
-        consultar.addEventListener("click", function() {
-            consultarClima(cidade);
-        });
-
         const remover = criarElemento(
             "button",
             "favorito-remover",
             "Remover"
         );
 
+        consultar.type = "button";
         remover.type = "button";
 
-        remover.addEventListener("click", function() {
-            alternarFavorito(cidade);
-        });
+        consultar.addEventListener("click", () => consultarClima(cidade));
+        remover.addEventListener("click", () => alternarFavorito(cidade));
 
         cartao.append(nome, consultar, remover);
-        cidadesFavoritas.appendChild(cartao);
+        cidadesFavoritas.append(cartao);
     });
 }
 
-function criarDetalhe(titulo, valor) {
-    const detalhe = criarElemento(
-        "div",
-        "clima-detalhe"
-    );
+function descricaoClima(c) {
+    if (c === 0) return "Céu limpo";
+    if ([1, 2].includes(c)) return "Parcialmente nublado";
+    if (c === 3) return "Nublado";
+    if ([45, 48].includes(c)) return "Neblina";
+    if ([51, 53, 55, 56, 57].includes(c)) return "Garoa";
 
-    const rotulo = criarElemento(
-        "span",
-        "",
-        titulo
-    );
-
-    const informacao = criarElemento(
-        "strong",
-        "",
-        valor
-    );
-
-    detalhe.append(rotulo, informacao);
-
-    return detalhe;
-}
-
-function descricaoClima(codigo) {
-    if (codigo === 0) return "Céu limpo";
-
-    if ([1, 2].includes(codigo)) {
-        return "Parcialmente nublado";
-    }
-
-    if (codigo === 3) return "Nublado";
-
-    if ([45, 48].includes(codigo)) {
-        return "Neblina";
-    }
-
-    if ([51, 53, 55, 56, 57].includes(codigo)) {
-        return "Garoa";
-    }
-
-    if ([61, 63, 65, 66, 67, 80, 81, 82].includes(codigo)) {
+    if ([61, 63, 65, 66, 67, 80, 81, 82].includes(c)) {
         return "Chuva";
     }
 
-    if ([71, 73, 75, 77, 85, 86].includes(codigo)) {
+    if ([71, 73, 75, 77, 85, 86].includes(c)) {
         return "Neve";
     }
 
-    if ([95, 96, 99].includes(codigo)) {
+    if ([95, 96, 99].includes(c)) {
         return "Tempestade";
     }
 
     return "Condição não informada";
 }
 
-function iconeClima(codigo) {
-    if (codigo === 0) return "☀️";
-    if ([1, 2].includes(codigo)) return "🌤️";
-    if (codigo === 3) return "☁️";
-    if ([45, 48].includes(codigo)) return "🌫️";
+function iconeClima(c) {
+    if (c === 0) return "☀️";
+    if ([1, 2].includes(c)) return "🌤️";
+    if (c === 3) return "☁️";
+    if ([45, 48].includes(c)) return "🌫️";
 
-    if ([51, 53, 55, 56, 57].includes(codigo)) {
+    if ([51, 53, 55, 56, 57].includes(c)) {
         return "🌦️";
     }
 
-    if ([61, 63, 65, 66, 67, 80, 81, 82].includes(codigo)) {
+    if ([61, 63, 65, 66, 67, 80, 81, 82].includes(c)) {
         return "🌧️";
     }
 
-    if ([71, 73, 75, 77, 85, 86].includes(codigo)) {
+    if ([71, 73, 75, 77, 85, 86].includes(c)) {
         return "❄️";
     }
 
-    if ([95, 96, 99].includes(codigo)) {
+    if ([95, 96, 99].includes(c)) {
         return "⛈️";
     }
 
     return "🌡️";
 }
 
-function formatarData(data) {
-    const dataLocal = new Date(`${data}T12:00:00`);
-
-    return dataLocal.toLocaleDateString("pt-BR", {
-        weekday: "short",
-        day: "2-digit",
-        month: "2-digit"
-    });
-}
-
-function formatarTemperatura(valor) {
+function numero(valor, unidade = "") {
     return typeof valor === "number"
-        ? `${Math.round(valor)}°C`
+        ? `${valor.toLocaleString("pt-BR")}${unidade}`
         : "N/D";
 }
 
-function exibirClima(cidade, dadosClima) {
-    const tempo = dadosClima.current;
+function criarDetalhe(titulo, valor) {
+    const card = criarElemento("div", "clima-detalhe");
+
+    card.append(
+        criarElemento("span", "", titulo),
+        criarElemento("strong", "", valor)
+    );
+
+    return card;
+}
+
+function exibirClima(cidade, dados) {
+    const tempo = dados.current;
 
     if (!tempo || typeof tempo.temperature_2m !== "number") {
-        throw new Error(
-            "Temperatura atual indisponível na resposta."
-        );
+        throw new Error("Temperatura atual indisponível.");
     }
-
-    const temperaturaAtual = tempo.temperature_2m;
-    const velocidadeVento = tempo.wind_speed_10m;
-    const direcaoVento = tempo.wind_direction_10m;
-    const sensacaoTermica = tempo.apparent_temperature;
-    const umidadeRelativa = tempo.relative_humidity_2m;
-    const codigoClima = tempo.weather_code;
 
     const nome = criarElemento(
         "p",
@@ -356,129 +264,86 @@ function exibirClima(cidade, dadosClima) {
     const regiao = criarElemento(
         "p",
         "clima-regiao",
-        `${cidade.admin1 || "Estado não informado"} - ${cidade.country || "País não informado"}`
+        `${cidade.admin1 || ""} ${cidade.country || ""}`
     );
 
     const temperatura = criarElemento(
         "p",
         "clima-temperatura",
-        `${temperaturaAtual.toLocaleString("pt-BR")}°C`
+        numero(tempo.temperature_2m, "°C")
     );
 
-    if (temperaturaAtual < 20) {
-        temperatura.style.color = "#7dd3fc";
-    } else if (temperaturaAtual <= 30) {
-        temperatura.style.color = "#ffcf43";
-    } else {
-        temperatura.style.color = "#ff6b6b";
-    }
+    temperatura.style.color =
+        tempo.temperature_2m < 20
+            ? "#84d9ff"
+            : tempo.temperature_2m <= 30
+                ? "#ffcd56"
+                : "#ff8a7b";
 
     const condicao = criarElemento(
         "p",
         "clima-condicao",
-        `${iconeClima(codigoClima)} ${descricaoClima(codigoClima)}`
+        `${iconeClima(tempo.weather_code)} ${descricaoClima(tempo.weather_code)}`
     );
 
-    const informacoes = criarElemento(
-        "div",
-        "clima-informacoes"
+    const detalhes = criarElemento("div", "clima-informacoes");
+
+    detalhes.append(
+        criarDetalhe(
+            "Sensação térmica",
+            numero(tempo.apparent_temperature, "°C")
+        ),
+        criarDetalhe(
+            "Umidade relativa",
+            numero(tempo.relative_humidity_2m, "%")
+        ),
+        criarDetalhe(
+            "Velocidade do vento",
+            numero(tempo.wind_speed_10m, " km/h")
+        ),
+        criarDetalhe(
+            "Direção do vento",
+            numero(tempo.wind_direction_10m, "°")
+        )
     );
 
-    const vento = criarDetalhe(
-        "Velocidade do vento",
-        typeof velocidadeVento === "number"
-            ? `${velocidadeVento.toLocaleString("pt-BR")} km/h`
-            : "Não disponível"
-    );
+    const favorito = criarElemento("button", "botao-favorito");
+    favorito.id = "botaoFavorito";
+    favorito.type = "button";
 
-    const direcao = criarDetalhe(
-        "Direção do vento",
-        typeof direcaoVento === "number"
-            ? `${direcaoVento}°`
-            : "Não disponível"
-    );
-
-    const sensacao = criarDetalhe(
-        "Sensação térmica",
-        typeof sensacaoTermica === "number"
-            ? `${sensacaoTermica.toLocaleString("pt-BR")}°C`
-            : "Não disponível"
-    );
-
-    const umidade = criarDetalhe(
-        "Umidade relativa",
-        typeof umidadeRelativa === "number"
-            ? `${umidadeRelativa}%`
-            : "Não disponível"
-    );
-
-    informacoes.append(
-        vento,
-        direcao,
-        sensacao,
-        umidade
-    );
-
-    const botaoFavorito = criarElemento(
-        "button",
-        "botao-favorito"
-    );
-
-    botaoFavorito.id = "botaoFavorito";
-    botaoFavorito.type = "button";
-
-    botaoFavorito.addEventListener("click", function() {
-        alternarFavorito(cidade);
-    });
+    favorito.addEventListener("click", () => alternarFavorito(cidade));
 
     climaAtual.replaceChildren(
         nome,
         regiao,
         temperatura,
         condicao,
-        informacoes,
-        botaoFavorito
+        detalhes,
+        favorito
     );
 
     atualizarBotaoFavorito();
 }
 
-function exibirPrevisao(dadosClima) {
-    const daily = dadosClima.daily;
+function exibirPrevisao(dados) {
+    const diario = dados.daily;
 
-    if (!daily || !Array.isArray(daily.time)) {
-        throw new Error("Previsão diária indisponível.");
+    if (!diario || !Array.isArray(diario.time)) {
+        throw new Error("Previsão indisponível.");
     }
 
     previsaoDias.replaceChildren();
 
-    daily.time.slice(0, 5).forEach(function(dia, indice) {
-        const maxima = daily.temperature_2m_max?.[indice];
-        const minima = daily.temperature_2m_min?.[indice];
-        const chuva = daily.precipitation_probability_max?.[indice];
-        const codigo = daily.weather_code?.[indice];
+    diario.time.slice(0, 5).forEach((dia, i) => {
+        const card = criarElemento("article", "previsao-card");
 
-        const cartao = criarElemento(
-            "div",
-            "previsao-card"
-        );
-
-        const data = criarElemento(
-            "h3",
-            "previsao-data",
-            formatarData(dia)
-        );
-
-        const icone = criarElemento(
-            "div",
-            "previsao-icone",
-            iconeClima(codigo)
-        );
-
-        const condicao = criarElemento(
-            "p",
-            "previsao-condicao",
-            descricaoClima(codigo)
+        const data = new Date(`${dia}T12:00:00`).toLocaleDateString(
+            "pt-BR",
+            {
+                weekday: "short",
+                day: "2-digit",
+                month: "2-digit"
+            }
         );
 
         const temperaturas = criarElemento(
@@ -486,513 +351,457 @@ function exibirPrevisao(dadosClima) {
             "previsao-temperaturas"
         );
 
-        const textoMaxima = criarElemento(
-            "span",
-            "previsao-maxima",
-            `↑ ${formatarTemperatura(maxima)}`
-        );
-
-        const textoMinima = criarElemento(
-            "span",
-            "previsao-minima",
-            `↓ ${formatarTemperatura(minima)}`
-        );
-
         temperaturas.append(
-            textoMaxima,
-            textoMinima
+            criarElemento(
+                "span",
+                "previsao-maxima",
+                `↑ ${numero(diario.temperature_2m_max?.[i], "°C")}`
+            ),
+            criarElemento(
+                "span",
+                "previsao-minima",
+                `↓ ${numero(diario.temperature_2m_min?.[i], "°C")}`
+            )
         );
 
-        const probabilidade = criarElemento(
-            "p",
-            "previsao-chuva",
-            typeof chuva === "number"
-                ? `💧 Chuva: ${chuva}%`
-                : "💧 Chuva: N/D"
-        );
+        const chuva = diario.precipitation_probability_max?.[i];
 
-        cartao.append(
-            data,
-            icone,
-            condicao,
+        card.append(
+            criarElemento("h3", "previsao-data", data),
+            criarElemento(
+                "div",
+                "previsao-icone",
+                iconeClima(diario.weather_code?.[i])
+            ),
+            criarElemento(
+                "p",
+                "previsao-condicao",
+                descricaoClima(diario.weather_code?.[i])
+            ),
             temperaturas,
-            probabilidade
+            criarElemento(
+                "p",
+                "previsao-chuva",
+                `💧 ${numero(chuva, "%")} de chuva`
+            )
         );
 
-        previsaoDias.appendChild(cartao);
+        previsaoDias.append(card);
     });
 }
+
+const secaoAlertas = criarElemento("section", "secao-alertas");
+secaoAlertas.id = "alertasMeteorologicos";
+secaoAlertas.hidden = true;
+
+const conteudoAlertas = criarElemento("div", "conteudo-alertas");
+
+secaoAlertas.append(
+    criarElemento("h2", "", "⚠ Alertas meteorológicos"),
+    conteudoAlertas
+);
+
+climaAtual.closest("section").after(secaoAlertas);
 
 function limparAlertas() {
     secaoAlertas.hidden = true;
     conteudoAlertas.replaceChildren();
 }
 
-function mostrarFonteAlertas() {
-    const fonte = criarElemento(
+function fonteAlertas() {
+    const link = criarElemento(
         "a",
         "alerta-fonte",
-        "Dados do INMET via RadarMeteorológico"
+        "Fonte: INMET via RadarMeteorológico"
     );
 
-    fonte.href = "https://radarmeteorologico.com.br/alertas";
-    fonte.target = "_blank";
-    fonte.rel = "noopener noreferrer";
+    link.href = "https://radarmeteorologico.com.br/alertas";
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
 
-    conteudoAlertas.appendChild(fonte);
+    conteudoAlertas.append(link);
 }
 
-function textoDoAlerta(valor) {
-    if (typeof valor === "string") {
-        return valor;
-    }
-
-    if (valor && typeof valor === "object") {
-        return valor.descricao || valor.texto || "";
-    }
-
-    return "";
-}
-
-function criarAvisoMeteorologico(alerta) {
-    const cartao = criarElemento(
-        "article",
-        "alerta-card"
-    );
-
-    const nivelNumero = Number(alerta.nivel);
-
-    if (nivelNumero >= 3) {
-        cartao.classList.add("alerta-grave");
-    } else if (nivelNumero === 2) {
-        cartao.classList.add("alerta-perigo");
-    } else {
-        cartao.classList.add("alerta-potencial");
-    }
-
-    const nivel = criarElemento(
-        "span",
-        "alerta-nivel",
-        alerta.severidade || "Alerta meteorológico"
-    );
-
-    const evento = criarElemento(
-        "h3",
-        "alerta-evento",
-        `⚠️ ${alerta.evento || "Aviso meteorológico"}`
-    );
-
-    cartao.append(nivel, evento);
-
-    if (alerta.inicio) {
-        cartao.appendChild(
-            criarElemento(
-                "p",
-                "alerta-validade",
-                `Início: ${alerta.inicio}`
-            )
+function codigoIbge(codigo) {
+    if (codigo && typeof codigo === "object") {
+        return String(
+            codigo.ibge ?? codigo.codigo ?? codigo.geocode ?? ""
         );
     }
+
+    return String(codigo ?? "");
+}
+
+function criarAlerta(alerta) {
+    const card = criarElemento("article", "alerta-card");
+    const nivel = Number(alerta.nivel);
+
+    card.classList.add(
+        nivel >= 3
+            ? "alerta-grave"
+            : nivel === 2
+                ? "alerta-perigo"
+                : "alerta-potencial"
+    );
+
+    card.append(
+        criarElemento(
+            "span",
+            "alerta-nivel",
+            alerta.severidade || "Aviso meteorológico"
+        ),
+        criarElemento(
+            "h3",
+            "alerta-evento",
+            `⚠ ${alerta.evento || "Alerta do INMET"}`
+        )
+    );
 
     if (alerta.fim) {
-        cartao.appendChild(
+        card.append(
             criarElemento(
                 "p",
                 "alerta-validade",
-                `Término: ${alerta.fim}`
+                `Válido até: ${alerta.fim}`
             )
         );
     }
 
-    if (Array.isArray(alerta.riscos)) {
-        alerta.riscos.forEach(function(risco) {
-            const texto = textoDoAlerta(risco);
+    for (const campo of ["riscos", "instrucoes"]) {
+        const valores = Array.isArray(alerta[campo])
+            ? alerta[campo]
+            : [alerta[campo]];
+
+        valores.forEach(item => {
+            const texto = typeof item === "string"
+                ? item
+                : (item?.descricao || item?.texto);
 
             if (texto) {
-                cartao.appendChild(
+                card.append(
                     criarElemento(
                         "p",
-                        "alerta-risco",
+                        campo === "riscos"
+                            ? "alerta-risco"
+                            : "alerta-instrucao",
                         texto
                     )
                 );
             }
         });
-    } else if (typeof alerta.riscos === "string") {
-        cartao.appendChild(
-            criarElemento(
-                "p",
-                "alerta-risco",
-                alerta.riscos
-            )
-        );
     }
 
-    if (Array.isArray(alerta.instrucoes)) {
-        alerta.instrucoes.forEach(function(instrucao) {
-            const texto = textoDoAlerta(instrucao);
-
-            if (texto) {
-                cartao.appendChild(
-                    criarElemento(
-                        "p",
-                        "alerta-instrucao",
-                        texto
-                    )
-                );
-            }
-        });
-    } else if (typeof alerta.instrucoes === "string") {
-        cartao.appendChild(
-            criarElemento(
-                "p",
-                "alerta-instrucao",
-                alerta.instrucoes
-            )
-        );
-    }
-
-    return cartao;
+    return card;
 }
 
-async function consultarAlertas(cidade, consultaAtual) {
+async function consultarAlertas(cidade, numeroDaConsulta) {
     limparAlertas();
 
-    const pais = normalizarTexto(cidade.country);
-
-    const cidadeBrasileira =
+    const brasileiro =
         cidade.country_code === "BR" ||
-        pais === "brasil" ||
-        pais === "brazil";
+        ["brasil", "brazil"].includes(normalizar(cidade.country));
 
-    if (!cidadeBrasileira) {
+    if (!brasileiro) {
         return;
     }
 
-    const uf = obterUF(cidade);
+    const uf =
+        estados[normalizar(cidade.admin1)] ||
+        String(cidade.admin1 || "").toUpperCase();
 
-    if (!uf) {
+    if (!Object.values(estados).includes(uf)) {
         return;
     }
 
     try {
-        const urlCidade =
+        const urlMunicipios =
             `https://radarmeteorologico.com.br/api/v1/cidades?q=${encodeURIComponent(cidade.name)}`;
 
-        const respostaCidade = await fetch(urlCidade);
+        const municipiosResposta = await fetch(urlMunicipios);
 
-        if (!respostaCidade.ok) {
-            throw new Error("Erro ao localizar município.");
+        if (!municipiosResposta.ok) {
+            throw new Error("Falha na consulta de municípios.");
         }
 
-        const dadosCidade = await respostaCidade.json();
+        const municipiosJson = await municipiosResposta.json();
 
-        if (consultaAtual !== numeroConsultaClima) {
+        if (numeroDaConsulta !== consultaAtual) {
             return;
         }
 
-        if (!Array.isArray(dadosCidade.cidades)) {
-            throw new Error("Resposta de municípios inválida.");
+        const municipios = Array.isArray(municipiosJson)
+            ? municipiosJson
+            : municipiosJson.cidades;
+
+        if (!Array.isArray(municipios)) {
+            throw new Error("Resposta de municípios desconhecida.");
         }
 
-        const municipio = dadosCidade.cidades.find(function(item) {
-            return (
-                normalizarTexto(item.nome) === normalizarTexto(cidade.name) &&
-                String(item.uf).toUpperCase() === uf
-            );
-        });
+        const municipio = municipios.find(item =>
+            normalizar(item.nome) === normalizar(cidade.name) &&
+            String(item.uf).toUpperCase() === uf
+        );
 
-        if (!municipio || !municipio.ibge) {
+        if (!municipio) {
             throw new Error(
-                "Município não identificado na base IBGE."
+                "Não foi possível confirmar o município pelo IBGE."
             );
+        }
+
+        const ibge = codigoIbge(
+            municipio.ibge ??
+            municipio.codigo_ibge ??
+            municipio.codigo
+        );
+
+        if (!/^\d{7}$/.test(ibge)) {
+            throw new Error("Código IBGE não identificado.");
         }
 
         const urlAlertas =
             `https://radarmeteorologico.com.br/api/v1/alertas?uf=${uf}`;
 
-        const respostaAlertas = await fetch(urlAlertas);
+        const alertasResposta = await fetch(urlAlertas);
 
-        if (!respostaAlertas.ok) {
-            throw new Error("Erro ao consultar alertas.");
+        if (!alertasResposta.ok) {
+            throw new Error("Falha na consulta de alertas.");
         }
 
-        const dadosAlertas = await respostaAlertas.json();
+        const alertasJson = await alertasResposta.json();
 
-        if (consultaAtual !== numeroConsultaClima) {
+        if (numeroDaConsulta !== consultaAtual) {
             return;
         }
 
-        if (!Array.isArray(dadosAlertas.alertas)) {
-            throw new Error("Resposta de alertas inválida.");
+        const alertas = Array.isArray(alertasJson)
+            ? alertasJson
+            : alertasJson.alertas;
+
+        if (!Array.isArray(alertas)) {
+            throw new Error("Resposta de alertas desconhecida.");
         }
 
-        const alertasDaCidade = dadosAlertas.alertas.filter(
-            function(alerta) {
-                return (
-                    alerta.futuro !== true &&
-                    Array.isArray(alerta.geocodes) &&
-                    alerta.geocodes.some(function(codigo) {
-                        return String(codigo) === String(municipio.ibge);
-                    })
-                );
-            }
-        );
-
-        if (alertasDaCidade.length === 0) {
-            return;
-        }
-
-        alertasDaCidade.sort(function(a, b) {
-            return Number(b.nivel || 0) - Number(a.nivel || 0);
-        });
-
-        conteudoAlertas.replaceChildren();
-
-        alertasDaCidade.forEach(function(alerta) {
-            conteudoAlertas.appendChild(
-                criarAvisoMeteorologico(alerta)
-            );
-        });
-
-        mostrarFonteAlertas();
-        secaoAlertas.hidden = false;
-
-    } catch (erro) {
-        if (consultaAtual !== numeroConsultaClima) {
-            return;
-        }
-
-        console.error("Erro ao consultar alertas:", erro);
-
-        conteudoAlertas.replaceChildren(
-            criarElemento(
-                "p",
-                "alerta-indisponivel",
-                "Não foi possível verificar os alertas meteorológicos desta cidade."
+        const locais = alertas.filter(alerta =>
+            alerta.futuro !== true &&
+            Array.isArray(alerta.geocodes) &&
+            alerta.geocodes.some(
+                codigo => codigoIbge(codigo) === ibge
             )
         );
 
-        mostrarFonteAlertas();
+        if (!locais.length) {
+            return;
+        }
+
+        locais.sort(
+            (a, b) => Number(b.nivel || 0) - Number(a.nivel || 0)
+        );
+
+        locais.forEach(alerta => {
+            conteudoAlertas.append(criarAlerta(alerta));
+        });
+
+        fonteAlertas();
+        secaoAlertas.hidden = false;
+
+    } catch (erro) {
+        if (numeroDaConsulta !== consultaAtual) {
+            return;
+        }
+
+        console.error("Alertas:", erro);
+
+        conteudoAlertas.append(
+            criarElemento(
+                "p",
+                "alerta-indisponivel",
+                "Não foi possível verificar alertas para esta cidade."
+            )
+        );
+
+        fonteAlertas();
         secaoAlertas.hidden = false;
     }
 }
 
-function consultarClima(cidade) {
-    const consultaAtual = ++numeroConsultaClima;
+async function consultarClima(cidade) {
+    const numeroDaConsulta = ++consultaAtual;
 
     cidadeSelecionada = cidade;
-
     limparAlertas();
 
-    document.querySelectorAll(".botao-cidade").forEach(
-        function(botao) {
-            botao.classList.toggle(
-                "selecionado",
-                botao.dataset.cidadeId === String(cidade.id)
-            );
-        }
-    );
-
-    mostrarMensagem("Consultando clima...");
+    document.querySelectorAll(".botao-cidade").forEach(botao => {
+        botao.classList.toggle(
+            "selecionado",
+            botao.dataset.id === identificador(cidade)
+        );
+    });
 
     climaAtual.textContent =
-        "Carregando condições meteorológicas...";
+        "Consultando condições meteorológicas...";
 
     previsaoDias.textContent =
         "Carregando previsão...";
 
+    mostrarMensagem("Consultando clima...");
+
     const parametros = new URLSearchParams({
         latitude: cidade.latitude,
         longitude: cidade.longitude,
-        current: [
-            "temperature_2m",
-            "apparent_temperature",
-            "relative_humidity_2m",
-            "weather_code",
-            "wind_speed_10m",
-            "wind_direction_10m"
-        ].join(","),
-        daily: [
-            "temperature_2m_max",
-            "temperature_2m_min",
-            "precipitation_probability_max",
-            "weather_code"
-        ].join(","),
+        current: "temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m",
+        daily: "temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code",
         timezone: "auto",
         forecast_days: "5"
     });
 
-    const urlClima =
-        `https://api.open-meteo.com/v1/forecast?${parametros.toString()}`;
+    try {
+        const resposta = await fetch(
+            `https://api.open-meteo.com/v1/forecast?${parametros}`
+        );
 
-    fetch(urlClima)
-        .then(function(resposta) {
-            if (!resposta.ok) {
-                throw new Error(
-                    `Erro HTTP ${resposta.status} ao consultar o clima.`
-                );
-            }
+        if (!resposta.ok) {
+            throw new Error(`Erro HTTP ${resposta.status}`);
+        }
 
-            return resposta.json();
-        })
-        .then(function(dadosClima) {
-            if (consultaAtual !== numeroConsultaClima) {
-                return;
-            }
+        const dados = await resposta.json();
 
-            if (dadosClima.error) {
-                throw new Error(
-                    dadosClima.reason || "Erro retornado pela API."
-                );
-            }
+        if (numeroDaConsulta !== consultaAtual) {
+            return;
+        }
 
-            if (!dadosClima.current) {
-                throw new Error(
-                    "Dados meteorológicos atuais indisponíveis."
-                );
-            }
-
-            console.log("Dados meteorológicos:", dadosClima);
-
-            exibirClima(cidade, dadosClima);
-            exibirPrevisao(dadosClima);
-
-            mostrarMensagem(
-                "Consulta concluída!",
-                "sucesso"
+        if (dados.error) {
+            throw new Error(
+                dados.reason || "Resposta inválida da API."
             );
+        }
 
-            consultarAlertas(cidade, consultaAtual);
-        })
-        .catch(function(erro) {
-            if (consultaAtual !== numeroConsultaClima) {
-                return;
-            }
+        if (!dados.current || !dados.daily) {
+            throw new Error("Dados meteorológicos incompletos.");
+        }
 
-            console.error(erro);
+        exibirClima(cidade, dados);
+        exibirPrevisao(dados);
 
-            climaAtual.textContent =
-                "Não foi possível consultar o clima desta cidade.";
+        mostrarMensagem(
+            "Consulta concluída!",
+            "sucesso"
+        );
 
-            previsaoDias.textContent =
-                "Previsão indisponível no momento.";
+        consultarAlertas(cidade, numeroDaConsulta);
 
-            mostrarMensagem(
-                "Erro ao consultar o clima. Tente novamente.",
-                "erro"
-            );
-        });
+    } catch (erro) {
+        if (numeroDaConsulta !== consultaAtual) {
+            return;
+        }
+
+        console.error(erro);
+
+        climaAtual.textContent =
+            "Não foi possível consultar o clima desta cidade.";
+
+        previsaoDias.textContent =
+            "Previsão indisponível no momento.";
+
+        mostrarMensagem(
+            "Erro ao consultar o clima. Tente novamente.",
+            "erro"
+        );
+    }
 }
 
-formPesquisa.addEventListener("submit", function(event) {
+formPesquisa.addEventListener("submit", async function(event) {
     event.preventDefault();
 
     const nomeCidade = campoCidade.value.trim();
 
-    if (nomeCidade === "") {
+    if (!nomeCidade) {
         mostrarMensagem(
             "Digite o nome da cidade!",
             "erro"
         );
-
         return;
     }
 
-    const pesquisaAtual = ++numeroPesquisa;
+    const numeroDaPesquisa = ++pesquisaAtual;
 
-    ++numeroConsultaClima;
+    ++consultaAtual;
     cidadeSelecionada = null;
 
-    limparAlertas();
     resultadosCidades.replaceChildren();
 
     climaAtual.textContent =
         "Selecione uma cidade para consultar o clima.";
 
     previsaoDias.replaceChildren();
+    limparAlertas();
 
     mostrarMensagem("Pesquisando cidade...");
 
-    const url =
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(nomeCidade)}&count=10&language=pt`;
+    try {
+        const resposta = await fetch(
+            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(nomeCidade)}&count=10&language=pt`
+        );
 
-    fetch(url)
-        .then(function(resposta) {
-            if (!resposta.ok) {
-                throw new Error(
-                    "Erro ao localizar a cidade."
-                );
-            }
+        if (!resposta.ok) {
+            throw new Error(`Erro HTTP ${resposta.status}`);
+        }
 
-            return resposta.json();
-        })
-        .then(function(dados) {
-            if (pesquisaAtual !== numeroPesquisa) {
-                return;
-            }
+        const dados = await resposta.json();
 
-            if (
-                !Array.isArray(dados.results) ||
-                dados.results.length === 0
-            ) {
-                mostrarMensagem(
-                    "Nenhuma cidade encontrada!",
-                    "erro"
-                );
+        if (numeroDaPesquisa !== pesquisaAtual) {
+            return;
+        }
 
-                return;
-            }
-
-            dados.results.forEach(function(cidade) {
-                const estado =
-                    cidade.admin1 || "Estado não informado";
-
-                const pais =
-                    cidade.country || "País não informado";
-
-                const botaoCidade = criarElemento(
-                    "button",
-                    "botao-cidade",
-                    `${cidade.name} - ${estado} - ${pais}`
-                );
-
-                botaoCidade.type = "button";
-                botaoCidade.dataset.cidadeId =
-                    String(cidade.id);
-
-                botaoCidade.addEventListener("click", function() {
-                    resultadosCidades
-                        .querySelectorAll(".botao-cidade")
-                        .forEach(function(outroBotao) {
-                            if (outroBotao !== botaoCidade) {
-                                outroBotao.remove();
-                            }
-                        });
-
-                    consultarClima(cidade);
-                });
-
-                resultadosCidades.appendChild(botaoCidade);
-            });
-
+        if (!Array.isArray(dados.results) || !dados.results.length) {
             mostrarMensagem(
-                "Selecione uma cidade nos resultados.",
-                "sucesso"
-            );
-        })
-        .catch(function(erro) {
-            if (pesquisaAtual !== numeroPesquisa) {
-                return;
-            }
-
-            console.error(erro);
-
-            mostrarMensagem(
-                "Erro ao pesquisar cidades. Tente novamente.",
+                "Nenhuma cidade encontrada!",
                 "erro"
             );
+            return;
+        }
+
+        dados.results.forEach(cidade => {
+            const botao = criarElemento(
+                "button",
+                "botao-cidade",
+                `${cidade.name} - ${cidade.admin1 || "Estado não informado"} - ${cidade.country || "País não informado"}`
+            );
+
+            botao.type = "button";
+            botao.dataset.id = identificador(cidade);
+
+            botao.addEventListener("click", () => {
+                resultadosCidades
+                    .querySelectorAll(".botao-cidade")
+                    .forEach(outro => {
+                        if (outro !== botao) {
+                            outro.remove();
+                        }
+                    });
+
+                consultarClima(cidade);
+            });
+
+            resultadosCidades.append(botao);
         });
+
+        mostrarMensagem(
+            "Selecione uma cidade nos resultados.",
+            "sucesso"
+        );
+
+    } catch (erro) {
+        if (numeroDaPesquisa !== pesquisaAtual) {
+            return;
+        }
+
+        console.error(erro);
+
+        mostrarMensagem(
+            "Erro ao pesquisar cidades. Tente novamente.",
+            "erro"
+        );
+    }
 });
 
 exibirFavoritos();

@@ -1,4 +1,14 @@
 
+:root {
+    --fundo: #071320;
+    --cartao: rgba(17, 35, 51, 0.68);
+    --borda: rgba(181, 216, 241, 0.25);
+    --texto: #f6faff;
+    --suave: #c5d7e4;
+    --azul: #80d9ff;
+    --amarelo: #ffcc52;
+}
+
 * {
     box-sizing: border-box;
 }
@@ -9,29 +19,14 @@ html {
 
 body {
     margin: 0;
-    padding: 25px;
     min-height: 100vh;
+    padding: 26px;
+    color: var(--texto);
     font-family: Arial, Helvetica, sans-serif;
-    color: #ffffff;
-
     background:
-        radial-gradient(
-            ellipse at 80% 85%,
-            rgba(255, 163, 45, 0.25),
-            transparent 40%
-        ),
-        radial-gradient(
-            ellipse at 15% 15%,
-            rgba(70, 90, 105, 0.35),
-            transparent 45%
-        ),
-        linear-gradient(
-            135deg,
-            #080d12,
-            #19232b,
-            #080c10
-        );
-
+        radial-gradient(ellipse at 82% 84%, rgba(227, 118, 30, .23), transparent 35%),
+        radial-gradient(ellipse at 15% 13%, rgba(45, 113, 157, .29), transparent 49%),
+        linear-gradient(140deg, #06101b 5%, #11283b 53%, #07111c 100%);
     background-attachment: fixed;
 }
 
@@ -39,76 +34,92 @@ body::before {
     content: "";
     position: fixed;
     inset: 0;
-    z-index: -1;
     pointer-events: none;
-
+    z-index: -1;
     background-image:
-        radial-gradient(
-            ellipse 2px 7px at 25px 30px,
-            rgba(255,255,255,0.28) 20%,
-            transparent 85%
-        ),
-        radial-gradient(
-            ellipse 1px 5px at 70px 85px,
-            rgba(255,255,255,0.22) 20%,
-            transparent 85%
-        ),
-        radial-gradient(
-            ellipse 2px 9px at 110px 45px,
-            rgba(255,255,255,0.18) 20%,
-            transparent 85%
-        );
-
-    background-size:
-        130px 160px,
-        110px 135px,
-        170px 190px;
-
-    opacity: 0.7;
+        radial-gradient(ellipse 2px 8px at 14px 27px, rgba(215, 237, 251, .35) 25%, transparent 85%),
+        radial-gradient(ellipse 1px 5px at 65px 94px, rgba(255, 255, 255, .3) 25%, transparent 85%),
+        radial-gradient(ellipse 2px 10px at 107px 43px, rgba(184, 222, 245, .23) 25%, transparent 85%);
+    background-size: 121px 146px, 89px 138px, 154px 191px;
+    opacity: .75;
 }
 
 header {
+    max-width: 1220px;
+    margin: 0 auto 26px;
+    padding: 30px 20px 35px;
     text-align: center;
-    padding: 40px 20px;
-    margin-bottom: 25px;
 }
 
 h1 {
-    color: #ffffff;
-    font-size: clamp(36px, 6vw, 64px);
-    letter-spacing: -2px;
-    margin-bottom: 15px;
+    font-size: clamp(42px, 6vw, 76px);
+    margin: 0 0 12px;
+    font-weight: 800;
+    letter-spacing: -2.5px;
+    text-shadow: 0 5px 35px rgba(0, 0, 0, .25);
 }
 
 header p {
-    color: #d1d5db;
+    color: var(--suave);
+    margin: 0;
     font-size: 16px;
 }
 
 main {
-    max-width: 1100px;
+    max-width: 1220px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
     gap: 20px;
+    align-items: start;
 }
 
 section {
-    background: rgba(25, 33, 42, 0.64);
-    border: 1px solid rgba(255,255,255,0.18);
-    border-radius: 18px;
-    padding: 25px;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 15px 35px rgba(0,0,0,0.25);
     min-width: 0;
+    padding: 24px;
+    background: var(--cartao);
+    border: 1px solid var(--borda);
+    border-radius: 22px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, .19), inset 0 1px rgba(255,255,255,.08);
+    backdrop-filter: blur(17px);
+    -webkit-backdrop-filter: blur(17px);
+}
+
+main > section:has(#formPesquisa) {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+main > section:has(#resultadosCidades) {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+main > section:has(#climaAtual) {
+    grid-column: 1;
+    grid-row: 2 / span 2;
+}
+
+main > section:has(#previsaoDias) {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+main > section:has(#cidadesFavoritas) {
+    grid-column: 2;
+    grid-row: 3;
+}
+
+main > section:has(#mensagem) {
+    grid-column: 1 / -1;
+    grid-row: 4;
 }
 
 h2 {
-    font-size: 22px;
-    color: #ffcf43;
-    margin-top: 0;
-    margin-bottom: 20px;
+    color: var(--amarelo);
+    font-size: 21px;
+    margin: 0 0 18px;
+    letter-spacing: -.3px;
 }
 
 form {
@@ -118,88 +129,81 @@ form {
 }
 
 label {
-    font-size: 14px;
-    color: #d1d5db;
+    color: var(--suave);
+    font-size: 13px;
 }
 
 input {
+    min-width: 0;
     width: 100%;
-    padding: 14px;
-    background: rgba(0,0,0,0.35);
-    color: #ffffff;
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 10px;
+    padding: 15px;
+    color: #fff;
+    background: rgba(2, 13, 25, .55);
+    border: 1px solid rgba(178, 221, 249, .33);
+    border-radius: 12px;
     font-size: 15px;
-    outline: none;
+    outline: 0;
 }
 
 input::placeholder {
-    color: #9ca3af;
+    color: #9cb4c6;
 }
 
 input:focus {
-    border-color: #ffcf43;
-    box-shadow: 0 0 0 3px rgba(255,207,67,0.12);
+    border-color: var(--azul);
+    box-shadow: 0 0 0 3px rgba(128, 217, 255, .13);
 }
 
 button {
-    background-color: #ffcf43;
-    color: #151515;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: bold;
     cursor: pointer;
-    transition:
-        background-color 0.25s,
-        color 0.25s,
-        transform 0.25s,
-        border-color 0.25s;
+    font: inherit;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 13px 17px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    color: #111b25;
+    background: var(--amarelo);
+    transition: background-color .2s, transform .2s, border-color .2s;
 }
 
 button:hover {
-    background-color: #ffe17a;
+    background: #ffe08b;
     transform: translateY(-2px);
 }
 
 button:focus-visible,
 a:focus-visible {
-    outline: 2px solid #ffcf43;
+    outline: 2px solid var(--azul);
     outline-offset: 3px;
 }
 
 #resultadosCidades {
     display: flex;
+    gap: 9px;
     flex-wrap: wrap;
-    gap: 12px;
 }
 
 .botao-cidade {
-    background: rgba(255,255,255,0.08);
-    color: #ffffff;
-    border: 1px solid rgba(255,255,255,0.22);
-    border-radius: 10px;
-    padding: 14px;
+    color: var(--texto);
+    background: rgba(181, 216, 241, .11);
+    border: 1px solid rgba(181, 216, 241, .28);
+    font-weight: 400;
     text-align: left;
-    font-weight: normal;
+    padding: 12px 13px;
 }
 
-.botao-cidade:hover {
-    background: rgba(255,207,67,0.17);
-    border-color: #ffcf43;
-    color: #ffffff;
-}
-
+.botao-cidade:hover,
 .botao-cidade.selecionado {
-    border-color: #ffcf43;
-    background: rgba(255,207,67,0.18);
+    border-color: var(--amarelo);
+    color: var(--texto);
+    background: rgba(255, 204, 82, .14);
 }
 
 #climaAtual {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 13px;
 }
 
 #climaAtual p {
@@ -207,189 +211,196 @@ a:focus-visible {
 }
 
 .clima-cidade {
-    color: #ffffff;
-    font-size: 20px;
-    font-weight: bold;
+    font-size: 25px;
+    font-weight: 800;
 }
 
 .clima-regiao {
-    color: #cbd5e1;
+    color: var(--suave);
     font-size: 13px;
 }
 
 .clima-temperatura {
-    font-size: clamp(48px, 6vw, 76px);
-    font-weight: bold;
-    letter-spacing: -2px;
-    line-height: 1.1;
+    font-size: clamp(58px, 8vw, 100px);
+    font-weight: 800;
+    letter-spacing: -4px;
+    line-height: 1.05;
+    margin: 8px 0;
 }
 
 .clima-condicao {
-    color: #e2e8f0;
-    font-size: 17px;
+    font-size: 19px;
+    color: #e2eef6;
 }
 
 .clima-informacoes {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
+    margin-top: 12px;
 }
 
 .clima-detalhe {
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 12px;
-    padding: 15px;
     min-width: 0;
+    padding: 15px;
+    border-radius: 13px;
+    border: 1px solid rgba(198, 226, 243, .2);
+    background: rgba(185, 216, 237, .08);
 }
 
 .clima-detalhe span {
     display: block;
-    color: #cbd5e1;
     font-size: 12px;
     margin-bottom: 8px;
+    color: var(--suave);
 }
 
 .clima-detalhe strong {
-    color: #ffffff;
     font-size: 18px;
+    color: #f4faff;
     overflow-wrap: anywhere;
 }
 
 .botao-favorito {
-    background: rgba(255,207,67,0.12);
-    color: #ffcf43;
-    border: 1px solid #ffcf43;
-    width: fit-content;
+    align-self: flex-start;
+    background: rgba(255, 204, 82, .12);
+    color: var(--amarelo);
+    border-color: var(--amarelo);
+    margin-top: 12px;
 }
 
 .botao-favorito:hover {
-    background: #ffcf43;
-    color: #151515;
+    background: var(--amarelo);
+    color: #121a22;
 }
 
 #previsaoDias {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
 }
 
 .previsao-card {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.18);
-    border-radius: 14px;
-    padding: 16px 10px;
-    text-align: center;
     min-width: 0;
-    transition:
-        transform 0.25s,
-        border-color 0.25s;
+    text-align: center;
+    padding: 14px 8px;
+    border-radius: 15px;
+    border: 1px solid rgba(183, 224, 250, .3);
+    background: linear-gradient(145deg, rgba(196, 225, 243, .13), rgba(18, 38, 56, .4));
+    transition: transform .2s, border-color .2s;
 }
 
 .previsao-card:hover {
-    transform: translateY(-4px);
-    border-color: #ffcf43;
+    transform: translateY(-3px);
+    border-color: var(--azul);
 }
 
 .previsao-data {
+    margin: 0 0 10px;
     font-size: 13px;
-    margin: 0 0 12px;
-    color: #ffffff;
     text-transform: capitalize;
 }
 
 .previsao-icone {
-    font-size: 32px;
-    margin-bottom: 12px;
+    font-size: 29px;
+    margin-bottom: 9px;
 }
 
 .previsao-condicao {
-    color: #cbd5e1;
-    font-size: 12px;
-    min-height: 32px;
-    line-height: 1.4;
+    min-height: 31px;
+    color: var(--suave);
+    line-height: 1.35;
+    font-size: 11px;
 }
 
 .previsao-temperaturas {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     gap: 8px;
-    margin: 14px 0;
+    flex-wrap: wrap;
+    margin: 10px 0;
 }
 
 .previsao-maxima {
-    font-size: 17px;
-    font-weight: bold;
-    color: #ffcf43;
+    font-size: 15px;
+    color: var(--amarelo);
+    font-weight: 800;
 }
 
 .previsao-minima {
-    font-size: 15px;
-    color: #7dd3fc;
+    font-size: 13px;
+    color: var(--azul);
 }
 
 .previsao-chuva {
-    color: #cbd5e1;
-    font-size: 12px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #d5e9f5;
     overflow-wrap: anywhere;
 }
 
 #cidadesFavoritas {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .favorito-card {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
-    padding: 14px;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.15);
+    gap: 9px;
+    padding: 12px;
     border-radius: 12px;
+    background: rgba(184, 221, 244, .09);
+    border: 1px solid rgba(184, 221, 244, .21);
 }
 
 .favorito-nome {
     flex: 1;
-    min-width: 120px;
-    color: #ffffff;
-    font-size: 14px;
+    min-width: 140px;
+    font-size: 13px;
 }
 
 .favorito-consultar {
-    background: #ffcf43;
-    color: #151515;
+    color: #10202e;
+    background: #8bd8ff;
+}
+
+.favorito-consultar:hover {
+    background: #bceaff;
 }
 
 .favorito-remover {
-    background: rgba(255,90,90,0.12);
-    color: #ffaaaa;
-    border: 1px solid rgba(255,90,90,0.45);
+    color: #ffc1bd;
+    background: rgba(221, 66, 68, .12);
+    border-color: rgba(255, 132, 136, .4);
 }
 
 .favorito-remover:hover {
-    background: #b91c1c;
-    color: #ffffff;
+    background: #a42a32;
+    color: white;
 }
 
-#mensagem {
-    color: #e2e8f0;
-    font-size: 14px;
+#mensagem,
+.texto-vazio {
+    font-size: 13px;
+    color: var(--suave);
     line-height: 1.6;
 }
 
 #mensagem[data-estado="erro"] {
-    color: #ff9a9a;
+    color: #ffad9e;
 }
 
 #mensagem[data-estado="sucesso"] {
-    color: #b3f1c5;
+    color: #aef0d0;
 }
 
 .secao-alertas {
-    grid-column: 1 / -1;
+    grid-column: 1 / -1 !important;
+    grid-row: 5;
 }
 
 .secao-alertas[hidden] {
@@ -399,14 +410,14 @@ a:focus-visible {
 .conteudo-alertas {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
 }
 
 .alerta-card {
-    padding: 20px;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(255,255,255,0.08);
+    padding: 19px;
+    border-radius: 14px;
+    background: rgba(255, 193, 76, .1);
+    border: 1px solid rgba(255, 193, 76, .45);
 }
 
 .alerta-potencial {
@@ -414,148 +425,149 @@ a:focus-visible {
 }
 
 .alerta-perigo {
-    border-left: 5px solid #f97316;
+    border-left: 5px solid #fb923c;
 }
 
 .alerta-grave {
-    border-left: 5px solid #ef4444;
+    border-left: 5px solid #f87171;
 }
 
 .alerta-nivel {
-    display: inline-block;
-    color: #ffcf43;
-    font-weight: bold;
-    font-size: 13px;
-    margin-bottom: 10px;
+    color: var(--amarelo);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
 }
 
 .alerta-evento {
-    margin: 0 0 12px;
-    font-size: 21px;
-    color: #ffffff;
+    font-size: 22px;
+    margin: 10px 0 12px;
 }
 
-.alerta-validade {
-    color: #cbd5e1;
-    font-size: 13px;
-    line-height: 1.5;
-}
-
-.alerta-risco {
-    color: #f1f5f9;
-    line-height: 1.6;
-    font-size: 14px;
-}
-
+.alerta-validade,
+.alerta-risco,
 .alerta-instrucao {
-    color: #cbd5e1;
     font-size: 13px;
-    line-height: 1.5;
+    color: #e8eef4;
+    line-height: 1.55;
 }
 
 .alerta-fonte {
-    color: #7dd3fc;
+    color: var(--azul);
     font-size: 12px;
     text-decoration: underline;
 }
 
-.alerta-fonte:hover {
-    color: #ffffff;
-}
-
 .alerta-indisponivel {
-    color: #ffcf43;
-    font-size: 14px;
+    color: var(--amarelo);
+    font-size: 13px;
 }
 
 footer {
     text-align: center;
-    color: #94a3b8;
-    padding: 30px;
-    margin-top: 30px;
-    font-size: 13px;
+    padding: 28px 10px;
+    margin-top: 25px;
+    font-size: 12px;
+    color: #a1b7c8;
 }
 
-@media (max-width: 1100px) {
-    #previsaoDias {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+@media (max-width: 900px) {
+    main {
+        grid-template-columns: 1fr;
+    }
+
+    main > section {
+        grid-column: 1 !important;
+        grid-row: auto !important;
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
     body {
         padding: 12px;
     }
 
     header {
-        padding: 25px 10px;
+        padding: 28px 10px;
+        margin-bottom: 10px;
+    }
+
+    h1 {
+        font-size: clamp(38px, 10vw, 53px);
+        letter-spacing: -1.5px;
+    }
+
+    header p {
+        font-size: 13px;
     }
 
     main {
-        grid-template-columns: 1fr;
-        gap: 15px;
+        gap: 14px;
     }
 
     section {
-        padding: 20px;
+        padding: 17px;
+        border-radius: 17px;
+    }
+
+    h2 {
+        font-size: 19px;
     }
 
     button {
-        width: 100%;
+        max-width: 100%;
     }
 
+    form button,
     .botao-cidade {
         width: 100%;
     }
 
-    .botao-favorito {
-        width: 100%;
+    .clima-temperatura {
+        font-size: 58px;
     }
 
-    .favorito-card {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    #previsaoDias {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 600px) {
-    #previsaoDias {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+    .clima-informacoes {
         gap: 8px;
     }
 
+    .clima-detalhe {
+        padding: 11px;
+    }
+
+    .clima-detalhe strong {
+        font-size: 15px;
+    }
+
+    #previsaoDias {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 7px;
+    }
+
     .previsao-card {
-        padding: 10px 5px;
-        border-radius: 10px;
+        padding: 10px 4px;
+        border-radius: 11px;
     }
 
     .previsao-data {
         font-size: 11px;
-        margin-bottom: 8px;
     }
 
     .previsao-icone {
-        font-size: 25px;
-        margin-bottom: 8px;
+        font-size: 24px;
     }
 
     .previsao-condicao {
         font-size: 10px;
-        line-height: 1.3;
-        min-height: 28px;
+        min-height: 27px;
     }
 
     .previsao-temperaturas {
-        gap: 5px;
-        margin: 8px 0;
+        gap: 4px;
     }
 
     .previsao-maxima {
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .previsao-minima {
@@ -566,22 +578,28 @@ footer {
         font-size: 10px;
     }
 
+    .favorito-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
     .alerta-card {
-        padding: 15px;
+        padding: 14px;
     }
 
     .alerta-evento {
-        font-size: 17px;
+        font-size: 18px;
     }
 }
 
-@media (max-width: 400px) {
+@media (max-width: 340px) {
     .clima-informacoes {
         grid-template-columns: 1fr;
     }
 
-    #previsaoDias {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+    .previsao-maxima,
+    .previsao-minima {
+        font-size: 11px;
     }
 }
 
@@ -589,7 +607,7 @@ footer {
     *,
     *::before,
     *::after {
-        scroll-behavior: auto !important;
         transition: none !important;
+        scroll-behavior: auto !important;
     }
 }
